@@ -1,0 +1,19 @@
+---
+description: Server-side hardening (validation, JSON-only API routes, Supabase SSR)
+globs:
+  - src/app/api/**/*.ts
+  - src/app/**/actions.ts
+  - src/lib/**/*.ts
+alwaysApply: true
+---
+
+Hardening rules for Server Actions, Route Handlers, and server lib modules.
+
+- Validate inputs before DB calls (zod `safeParse` if available; otherwise explicit guards).
+- Route Handlers return JSON only via `NextResponse.json()`. Never return HTML for API paths.
+- Use `createClient()` from `@/lib/supabase/server` — never service-role key in code reachable from client bundle.
+- Server Actions return structured `{ data }` / `{ error }` for predictable client handling.
+- Wrap unexpected errors; do not leak raw Postgres errors to clients.
+- After mutations: call `revalidatePath()` / `revalidateTag()` when cached data must refresh.
+- Do not import server-only modules into Client Components (check `"use client"` boundary).
+- Auth/session: rely on Supabase SSR + middleware; do not reimplement token parsing in actions.

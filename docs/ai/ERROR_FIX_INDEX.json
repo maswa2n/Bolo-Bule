@@ -1,0 +1,25 @@
+[
+  {
+    "date": "2026-08-06",
+    "title": "AppShell dashboard webpack_require__.n dev crash",
+    "symptom": "TypeError __webpack_require__.n is not a function on dashboard routes in AppShell.tsx dev",
+    "root_cause": "Webpack dev HMR race on next/link default import interop",
+    "fix": "Replaced Link with anchor + router.push; import type PropsWithChildren; cleared .next cache",
+    "verification": [
+      "npm run lint: PASS",
+      "npm run build: PASS",
+      "MCP execute_sql learning tables: PASS"
+    ]
+  },
+  {
+    "date": "2026-08-06",
+    "title": "Migration index references missing column",
+    "symptom": "db push failed with SQLSTATE 42703 on learning_case_versions_status_idx",
+    "root_cause": "Index targeted column domain that does not exist on learning_case_versions",
+    "fix": "Changed index to use status, internal_level, case_id and re-ran db push",
+    "verification": [
+      "npx supabase db push --include-all: PASS",
+      "npx supabase migration list: PASS"
+    ]
+  }
+]

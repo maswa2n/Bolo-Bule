@@ -1,0 +1,144 @@
+---
+description: Supabase SQL migrations — naming, idempotency, deploy, and agent checklist (prevents db push failures)
+globs:
+  - supabase/migrations/**
+  - supabase/**/*.sql
+alwaysApply: true
+---
+
+# Supabase migrations (agent checklist)
+
+Use this rule whenever creating or editing files under `supabase/migrations/`.
+
+## 1) File naming (MANDATORY)
+
+- Path: `supabase/migrations/<timestamp>_<snake_case_description>.sql`
+- `<timestamp>`: **14 digits** UTC, must be **unique** and **greater than** the latest migration in repo (e.g. `20260820143000`).
+- `<description>`: short, lowercase, underscores only (e.g. `rooster_travel_profile_route_airports`).
+- **NEVER** put files in `supabase/migrations/` without the timestamp prefix:
+  - Bad: `_extract_get_pcr_fn.sql`, `fix_rpc.sql`, `temp_chunk.sql`
+  - Put helpers/scripts in `supabase/scripts/` or repo-root `.temp_*` (gitignored), not migrations.
+
+## 2) How to deploy (MANDATORY)
+
+**Default path (production / shared Supabase):**
+
+```bash
+npx supabase migration list
+npx supabase db push --include-all
+```
+
+- Commit the migration file to git **before** push.
+- **Do NOT** use MCP `apply_migration` with ad-hoc names for routine deploys — it creates orphan versions in `supabase_migrations.schema_migrations` (e.g. `20260602080828`) and breaks `db push`.
+
+**MCP `apply_migration` only when:**
+
+- Emergency hotfix and user explicitly accepts history drift, **or**
+- You immediately follow up with `migration repair` + a matching local file + `db push` to sync history.
+
+## 3) SQL content rules
+
+### Idempotency (required)
+
+Migrations may run on DBs that already partially applied MCP/hotfix SQL. Prefer:
+
+- `CREATE TABLE IF NOT EXISTS`, `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`
+- `CREATE OR REPLACE FUNCTION` (not `DROP FUNCTION` unless necessary)
+- `DROP CONSTRAINT IF EXISTS` before `ADD CONSTRAINT`
+- `DROP POLICY IF EXISTS` / `DROP TRIGGER IF EXISTS` before recreate
+- `ON CONFLICT` for seed upserts
+
+### Ordering inside one migration
+
+- Helper functions **before** functions that call them (same file), **or** split into two migrations with increasing timestamps.
+- `ALTER TABLE` / new columns **before** `CREATE OR REPLACE` bodies that reference them.
+- End RPC-heavy migrations with: `NOTIFY pgrst, 'reload schema';`
+
+### Do not break applied history
+
+- **Never edit** a migration file that is already applied on remote (check `migration list`).
+- Always add a **new** migration file for fixes.
+
+### RPC / queries
+
+- `jsonb_agg(... ORDER BY t.col)` — `col` must exist on subquery alias `t` (use alias names like `depart_date`, not table column names).
+- Table prefix modul Rooster Kerja: `roster_` (bukan `rooster_`).
+- Default `SECURITY INVOKER`; `SECURITY DEFINER` only with justification + RLS review.
+- **Never downgrade DEFINER on RLS-bypass RPCs** — If a prior migration hardened an RPC as `SECURITY DEFINER` to perform updates blocked by RLS (status transitions, cross-policy writes, privileged reads), a rewrite may only **preserve or strengthen** — never revert to `INVOKER` without an explicit repair migration + Rule 43 state-transition smoke.
+- Grant pattern: `REVOKE ... FROM public; GRANT EXECUTE ... TO authenticated;`
+
+### RPC rewrite preservation gate (MANDATORY when `CREATE OR REPLACE` touches an **existing** RPC)
+
+**Applies to all modules** — not only timesheet validasi. Trigger whenever a migration adds DDL (column, index, KPI field) and **rewrites** an existing function body.
+
+**Classify the RPC before editing:**
+
+| Class | Signals | Rewrite risk |
+|-------|---------|--------------|
+| **Hardened / RLS-bypass** | Prior fix set `SECURITY DEFINER`; comment mentions RLS/draft-only/bypass; in-function auth guard | Downgrade to `INVOKER` → silent fail or 403 |
+| **State-transition** | Body changes row `status` / workflow enum across RLS boundary (SUBMITTED→DRAFT, approve/reject/reopen, close MR, inspect Pass/Fail) | Partial success: side table updated, main row stuck |
+| **Sibling parity** | Repo has parallel RPC/module pairs (A2B↔Pompa, duplicated inbox/submit paths) | Fix one side only → asymmetric bugs |
+| **Type-sensitive** | Casts to enum/domain; `RETURNS TABLE` shape; wrapper + `*_internal` split | Wrong type name → 400; wrong return → PGRST202 |
+
+1. **Minimal diff first** — If the goal is DDL only (e.g. `ADD COLUMN decision_at`), patch only the INSERT/UPDATE lines that need the new column. Do **not** paste a full replacement body unless every branch is re-verified.
+2. **Read before write** — Inspect live or latest repo definition (`pg_get_functiondef`, grep `supabase/migrations/**`, `docs/ai/ERROR_FIX_LOG.md`). Preserve unchanged:
+   - `SECURITY DEFINER` / `SECURITY INVOKER` (never downgrade DEFINER used for RLS bypass)
+   - in-function auth / module-access guards
+   - audit / outbox / notification side effects
+   - wrapper + `*_internal` split and heavy-RPC guards (Rule 41)
+   - one-time repair `UPDATE` blocks when transition logic changes
+3. **Type truth check** — Before any `::public.some_type` cast, verify against `information_schema.columns` (`udt_name`) or `pg_type` / `pg_proc` for enums and function signatures. Do **not** invent module-specific type names (incident: `a2b_logs.status` → `pumpset_log_status`, not `a2b_log_status`).
+4. **Sibling / parity modules** — Grep symbol across repo; if parallel implementations exist, patch **all siblings in the same task** or document Impact Follow-up. Examples:
+   - Timesheet validasi: `submit_a2b_validation_decision` ↔ `submit_pumpset_validation_decision` + inbox + edge submit
+   - Any `*_a2b_*` ↔ `*_pumpset_*` / `*_pompa_*` pair with same workflow semantics
+5. **Post-push smoke (Rule 43)** — For each **critical state transition** the RPC performs, define one measurable MCP check:
+   - `prosecdef` matches design (true when RLS bypass intended)
+   - no references to non-existent types in `pg_get_functiondef`
+   - **stuck-state query**: rows where side-effect table shows new state but main entity did not transition (e.g. validation NEEDS_REVISION + log still SUBMITTED = 0)
+   - auth guard still present in function body when previously required
+
+**Reference incidents (pattern, not exhaustive):**
+- Timesheet validasi NEEDS_REVISION: `20270820101000` regressed `20260403120000` → A2B 400 + Pompa silent fail; fixed `20270823140000` — see `ERROR_FIX_LOG.md` § 2026-07-23, § 2026-04-03.
+- Same pattern applies to: approval/reopen RPCs, inspect/submit chains, MR auto-close, password sync, any DEFINER RPC re-touched for a new column.
+
+## 4) Pre-push verification (agent MUST run)
+
+1. `npx supabase migration list` — no **Remote-only** rows without a matching local file.
+2. No invalid filenames under `supabase/migrations/`.
+3. New timestamp > max existing timestamp in `supabase/migrations/`.
+4. `npx supabase db push --include-all` succeeds (or document repair steps if history drift).
+5. If migration rewrites a **hardened or state-transition RPC** (see § RPC rewrite preservation gate): MCP smoke critical transitions — `prosecdef`, type references, stuck-state count (Rule 43).
+
+## 5) If `db push` fails: "Remote migration versions not found"
+
+This means remote history has versions **not** in local `supabase/migrations/`.
+
+1. Identify orphan versions from CLI error / `migration list` (Remote column filled, Local empty).
+2. `npx supabase migration repair --status reverted <orphan_versions...>` — **history only**, does not rollback schema.
+3. `npx supabase db push --include-all` for pending local files.
+4. If objects already exist from prior MCP apply, migrations must be idempotent (`IF NOT EXISTS` / `CREATE OR REPLACE`).
+
+Do **not** use `db pull` to “fix” unless user explicitly wants schema dump overwrite.
+
+## 6) Template (minimal new migration)
+
+```sql
+-- <one-line purpose>
+
+-- DDL (idempotent)
+-- ALTER TABLE ... ADD COLUMN IF NOT EXISTS ...
+
+-- RPC (if any)
+CREATE OR REPLACE FUNCTION public.fn_example(...)
+RETURNS ...
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = public
+AS $$ ... $$;
+
+NOTIFY pgrst, 'reload schema';
+```
+
+## 7) Log recurring failures
+
+After fixing migration/deploy issues, add a short entry to `docs/ai/ERROR_FIX_LOG.md` (symptom, root cause, fix, prevention).

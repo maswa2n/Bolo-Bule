@@ -1,0 +1,71 @@
+---
+description: Wajib testing otomatis berdasarkan target output user sebelum task selesai
+alwaysApply: true
+---
+
+# Target Output Verification Gate (Hard)
+
+Agent WAJIB menjalankan verifikasi terhadap **target output** sebelum menutup task.
+Dokumen kanonik: `docs/ai/TARGET_OUTPUT_VERIFICATION.md`, checklist: `docs/ai/CHANGE_CHECKLIST.md` § Target Output Verification Gate.
+
+## Trigger (semua task ini wajib gate)
+
+- Build / scaffold modul baru
+- Problem solving / bug fix / error fix
+- Refactor logic bisnis (schema, RPC, shared data access)
+- Integrasi / automation / cross-module change
+
+## Intake (PHASE 0)
+
+Sebelum implementasi, agent harus punya **Target Output** yang terukur:
+
+1. Jika user sudah menyebutkan expected behavior → pakai itu.
+2. Jika belum → agent wajib minta (maks 1 giliran) ATAU turunkan dari error evidence + repro step.
+3. Catat di response akhir dan di `docs/ai/CHANGE_CHECKLIST.md`.
+
+Format minimum:
+- **Surface:** frontend | server | db | edge | deploy
+- **Expected behavior:** apa yang harus terjadi
+- **Acceptance criteria:** daftar measurable (PASS/FAIL jelas)
+- **Verification commands:** command yang akan dijalankan
+
+## Eksekusi wajib (bukan hanya dokumentasi)
+
+Agent HARUS **menjalankan** verifikasi di terminal/MCP, lalu bandingkan hasil dengan target.
+
+| Layer touched | Minimum auto-run |
+|---------------|------------------|
+| App (UI/server) | `npm run lint` + `npm run build` |
+| Utils/logic baru | Tambah/jalankan unit test jika ada |
+| SQL/RPC/migration | MCP `execute_sql` smoke + cek signature/wrapper bila heavy RPC |
+| Rewrite hardened / state-transition RPC (Rule 32) | `db push` + MCP smoke per Rule 32 preservation gate |
+| Edge function | Deploy/smoke + MCP `get_logs` edge-function bila tersedia |
+
+Jangan menutup task hanya dengan menulis command di checklist tanpa menjalankannya.
+
+## Hard stop (task belum selesai)
+
+- Target output tidak terdefinisi dan tidak bisa diturunkan dari evidence.
+- Command verifikasi FAIL.
+- Actual output ≠ expected (build error, test fail, SQL return shape salah, regresi modul relasi).
+- Modul relasi kritikal belum diverifikasi (lihat Rule 42).
+
+Jika auto-test tidak memungkinkan (env/auth/browser-only):
+- Tulis **Manual Verification Required** dengan langkah minimal + alasan.
+- Task tetap **tidak selesai** sampai user konfirmasi manual PASS atau agent menjalankan alternatif.
+
+## Final response wajib berisi Verification Report
+
+```
+Target Output: <ringkas>
+Commands run: <daftar + exit code>
+Results: <expected vs actual per kriteria>
+Status: PASS | FAIL | MANUAL_PENDING
+```
+
+Jika FAIL: perbaiki dan ulang verifikasi. Jangan klaim selesai.
+
+## Docs (same task)
+
+- Update `docs/ai/CHANGE_CHECKLIST.md` dengan entry gate (template di § Target Output Verification Gate).
+- Bug fix: juga update `docs/ai/ERROR_FIX_LOG.md` + `ERROR_FIX_INDEX.json` (Rule 02).

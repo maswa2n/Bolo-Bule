@@ -1,0 +1,45 @@
+---
+description: Generator Server Actions + Route Handlers (Next.js server-side scaffold)
+globs:
+  - src/app/**/*.ts
+  - src/lib/**/*.ts
+alwaysApply: true
+---
+
+Use this rule when creating Server Actions, Route Handlers, or server-side data modules.
+
+GOAL
+- Keep server-side logic typed, validated, and consistent with Supabase-first patterns.
+- Keep the diff minimal.
+
+SERVER ACTIONS (`src/app/<route>/actions.ts` or colocated)
+- Start file with `"use server"` when exporting actions.
+- Import Supabase: `import { createClient } from "@/lib/supabase/server"`
+- Validate inputs (zod `safeParse` if zod is in project; otherwise explicit guards).
+- Return typed result objects `{ data }` or `{ error: string }` — do not throw to client unless intentional.
+- Revalidate paths when mutating: `revalidatePath()` / `revalidateTag()` as needed.
+
+ROUTE HANDLERS (`src/app/api/<path>/route.ts`) — use sparingly
+- Export named handlers: `GET`, `POST`, etc.
+- Use `createClient()` from server for Supabase access.
+- Return `NextResponse.json(...)` always — never HTML for API paths.
+- Validate query/body before DB calls.
+
+DATA MODULE (`src/lib/<module>.ts`)
+- Shared query/mutation functions callable from Server Components and Actions.
+- Normalize Supabase types at boundary (BigInt string → number, NUMERIC → number).
+- Expose typed functions: `list*`, `get*ById`, `create*`, `update*`, `delete*`.
+
+RPC / PRIVILEGED OPS
+- Prefer RPC in `supabase/migrations/**` for multi-table atomic logic.
+- Call via `supabase.rpc()` from server-side code only.
+- Never expose service-role operations to Client Components.
+
+ANTI-FOOTGUNS
+- Do not import `server.ts` createClient in Client Components.
+- Do not duplicate auth/session logic outside middleware + Supabase SSR helpers.
+
+VERIFICATION (mandatory after scaffold — Rule 43)
+- Run: `npm run lint` + `npm run build`
+- Record Target Output + Verification Report in `docs/ai/CHANGE_CHECKLIST.md`
+- See `docs/ai/TARGET_OUTPUT_VERIFICATION.md`

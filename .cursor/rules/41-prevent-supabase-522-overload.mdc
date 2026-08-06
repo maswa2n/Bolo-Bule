@@ -1,0 +1,64 @@
+---
+description: Prevent Supabase 522 / DB overload when building new modules (heavy RPC guard, burst control, MCP gate)
+alwaysApply: true
+---
+
+# Anti-522 / Anti-DB-Overload (new modules + data-access changes)
+
+522 = origin timeout when Postgres/API stops responding. Proven chain: unfiltered heavy RPC → `57014` → connection pile-up → 522.
+
+## Before you ship
+
+1. Identify every new `supabase.rpc`, `.from()`, edge invoke, and cron/trigger path.
+2. Classify each as **light** (single-row / filtered CRUD) or **heavy** (report, aggregation, bulk snapshot).
+3. Heavy paths MUST pass all gates below.
+
+## Frontend (`src/**` Client Components + hooks)
+
+- **Filter gate:** block UI actions that call heavy RPC without required filter (id, date range, pagination).
+- **Pagination:** `.limit()` + `.range()` on all lists; default date filter on reports.
+- **Dedup:** single-flight + abort controller for dashboard hooks; no duplicate mount fetches.
+- **Concurrency:** no `Promise.all` over many items for heavy RPC; max 3 parallel light queries.
+- **Loading:** always `try/catch/finally`; disable submit during async; no infinite retry on 5xx/57014.
+
+```typescript
+// ❌ BAD — unbounded report from client path
+await supabase.rpc("get_all_records", { p_filter: null });
+
+// ✅ GOOD — scoped + validated in server/lib layer
+if (!entityId) return { error: "Pilih entitas terlebih dahulu" };
+await supabase.rpc("get_records", { p_entity_id: entityId });
+```
+
+## Server (`src/lib/**`, Server Actions, Route Handlers)
+
+- Validate strong filters before RPC; reject empty/null filter for bulk endpoints.
+- No retry loop on DB timeout; return structured error, do not hammer Supabase.
+
+## SQL / RPC (`supabase/migrations/**`)
+
+- **Wrapper + internal:** public wrapper checks `auth.role()` and rejects unfiltered `authenticated`/`anon`.
+- **Indexes:** add partial/composite index for primary filter columns.
+- **Idempotent migrations:** follow `32-supabase-migrations.mdc`; deploy via `npx supabase db push --include-all`.
+
+## MCP validation gate (agent MUST run before done)
+
+When module touches data access or adds RPC/migration:
+
+| MCP tool | Check |
+|----------|-------|
+| `get_logs` service=`postgres` | No new burst of statement timeout after smoke test |
+| `get_logs` service=`edge-function` | No new 503/500 on module's edge function |
+| `get_advisors` type=`performance` | No new unindexed FK on hot tables you added |
+| `execute_sql` | Wrapper function exists if heavy RPC added |
+
+Record results in `docs/ai/CHANGE_CHECKLIST.md` § 522 Prevention Gate.
+
+## Stop — do not merge if
+
+- User-facing path can trigger unbounded scan without filter.
+- New RPC lacks wrapper guard for heavy read paths.
+- List page loads full table with `.select('*')` and no `.range()`.
+- Dashboard fires >5 heavy RPCs on mount without lazy tabs or dedup.
+
+Reference: `AGENTS.md` § ANTI-522, `docs/ai/ERROR_FIX_LOG.md`.

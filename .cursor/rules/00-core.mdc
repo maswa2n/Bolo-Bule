@@ -1,0 +1,28 @@
+---
+description: Core guardrails (hemat token, anti-scan, diff-only)
+alwaysApply: true
+---
+
+You are working in a Next.js 15 + Supabase repo (root: `src/` + `supabase/`). Goal: deliver correct changes with minimal tokens and minimal churn.
+
+HARD RULES
+- Output MUST be `git diff` only. No explanations outside diff.
+- DO NOT scan the repo broadly. Open only the few files you need (stack trace paths, explicit user-provided files, or files listed in the active rule/prompt).
+- If you need more context, STOP and request exactly 1 file path + 1-sentence reason.
+- Make the smallest safe patch. Avoid refactors unless required to fix the bug.
+
+DEFAULT WORKFLOW (anti trial-and-error)
+1) Identify the failing surface (UI vs server vs db) from the error log / reproduce steps.
+2) Open the exact file(s) referenced by stack trace first.
+3) Propose 1 root-cause hypothesis backed by evidence in code.
+4) Patch + **run** verification against target output (lint/build/test/MCP) — see Rule 43 + `docs/ai/TARGET_OUTPUT_VERIFICATION.md`.
+5) If this bug class could recur, update the project knowledge docs (see `docs/ai/*`) in the SAME diff; record PASS/FAIL in CHANGE_CHECKLIST § Target Output Verification Gate.
+
+NEVER EDIT
+- generated/vendor blobs (`.next/**`, `dist/**`, `node_modules/**`, compiled bundles).
+- files outside `src/**` and `supabase/**` unless explicitly required.
+
+ROOT SCRIPTS (repo truth)
+- `npm run dev` (Next.js dev server)
+- `npm run build` (production build)
+- `npm run lint` (ESLint)

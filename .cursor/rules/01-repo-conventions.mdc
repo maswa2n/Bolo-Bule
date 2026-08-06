@@ -1,0 +1,41 @@
+---
+description: Repo conventions (Next.js App Router + Supabase SSR patterns)
+alwaysApply: true
+---
+
+APP (Next.js 15 + TypeScript)
+- App Router: `src/app/**` — pages, layouts, route segments, Server Actions
+- Shared lib: `src/lib/**` — Supabase clients, data access helpers
+- Components: `src/components/**`
+- Types: `src/types/database.types.ts` (regenerate via `npm run db:types`)
+
+Supabase clients (repo truth)
+- Server Components / Server Actions / Route Handlers: `import { createClient } from "@/lib/supabase/server"`
+- Client Components: `import { createClient } from "@/lib/supabase/client"`
+- Middleware session refresh: `src/middleware.ts` + `src/lib/supabase/middleware.ts`
+- Do NOT use service-role key in client-side code. Do NOT create ad-hoc Supabase clients elsewhere.
+
+Server vs Client Components
+- Default to Server Components in `src/app/**`.
+- Add `"use client"` only when hooks, browser APIs, or interactivity require it.
+- Keep DB/Supabase calls in Server Components, Server Actions, or `src/lib/**`.
+
+File types
+- Use **`.tsx`** for React (JSX). Use **`.ts`** for non-UI modules.
+- Do **not** create new **`.js`** files under `src/` for app code.
+
+DB (Supabase)
+- BigInt/NUMERIC fields often arrive as string. Convert at data layer boundary, not in UI.
+- If a field is JSON string, normalize in `src/lib/**` with safe parse.
+
+API boundary rule (critical)
+- Keep Supabase/DB calls in `src/lib/**`, Server Actions, or Server Components — not scattered in Client Components.
+- Client Components call Server Actions or receive data via props from Server Components.
+
+Async loading (Client Components)
+- MUST use `try/catch/finally` to prevent infinite loading.
+- Always clear loading state in `finally`.
+
+Auth/RLS
+- Supabase 403 → assume RLS/policy issue until disproven.
+- Fix via migrations/policies in `supabase/migrations/**`.

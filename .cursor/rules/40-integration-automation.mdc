@@ -1,0 +1,40 @@
+---
+description: Integration & automation patterns (trigger-driven, idempotent, auditable)
+alwaysApply: true
+---
+
+Use this rule when the user asks for automation, approval flows, or cross-module integration.
+
+PRINCIPLES
+- Triggers must be explicit. Define WHAT event starts automation (Server Action, DB insert/update, schedule).
+- Automation must be idempotent (safe to retry). Always define a dedupe key.
+- Every automation needs an audit trail (who/what/when), retry policy, and failure visibility.
+
+RPC FUNCTION PATTERN (MANDATORY FOR SYNCHRONIZATION LOGIC)
+- **REQUIREMENT**: Logic sinkronisasi antar tabel/modul WAJIB menggunakan RPC function di PostgreSQL.
+- Why RPC over multiple queries:
+  - Type safety at PostgreSQL level
+  - Single round trip, atomic transaction
+  - All-or-nothing execution
+  - Business logic centralized and auditable
+- RPC Function Pattern:
+  - Version in `supabase/migrations/**` with timestamp prefix (Rule 32)
+  - Default `SECURITY INVOKER`; `SECURITY DEFINER` only with RLS review
+  - Grant EXECUTE to `authenticated`; revoke from `public` when appropriate
+  - End migration with `NOTIFY pgrst, 'reload schema';`
+
+RECOMMENDED PATTERN (simple and robust)
+1) Define domain event(s): `event_name`, `payload`, `source`, `dedupe_key`, `created_at`, `processed_at`, `status`, `error`.
+2) Write to an `outbox_events` table inside the same transaction as the state change.
+3) A worker/cron (Edge Function or pg_cron) processes events:
+   - validates current state (guard)
+   - performs side effects
+   - marks event processed
+   - retries on retryable errors; dead-letter on permanent failures.
+
+WHAT TO DELIVER (when asked)
+- A short state machine diagram (states + transitions)
+- Trigger list (event name, when fired, payload)
+- Idempotency strategy (dedupe key)
+- Audit log fields
+- Minimal DB + worker changes required

@@ -1,0 +1,46 @@
+---
+description: Generator frontend page + component (Supabase via Server Components/Actions)
+globs:
+  - src/app/**/*.tsx
+  - src/components/**/*.tsx
+  - src/lib/**/*.ts
+alwaysApply: true
+---
+
+Use this rule when creating a new page, component, or client-side module.
+
+FILE TYPES (mandatory)
+- New work: **only** `src/**/*.ts` and `src/**/*.tsx`. **Never** generate `src/**/*.js`.
+- Default to Server Components; add `"use client"` only when required.
+
+DATA ACCESS
+- Server Components: fetch via `createClient()` from `@/lib/supabase/server` or import from `src/lib/**`.
+- Client Components: call Server Actions — do NOT call Supabase directly unless existing pattern requires it.
+- Normalize types in `src/lib/**`:
+  - BigInt string → number at boundary
+  - NUMERIC string → `Number(...)` (guard NaN)
+  - JSON string → safe parse with fallback
+
+PAGE MODULE (`src/app/<route>/page.tsx`)
+- Prefer async Server Component for initial data load.
+- Pass data to Client Components as props when interactivity needed.
+- Colocate Server Actions in `actions.ts` next to the route.
+
+CLIENT COMPONENT (`src/components/**` or `"use client"` pages)
+- No direct Supabase calls unless repo already uses that pattern in the same area.
+- Async rule (mandatory): every async flow uses `try/catch/finally` and clears loading in `finally`.
+- Provide empty state + error state; never render blank screen on failure.
+
+FORMS / MUTATIONS
+- Prefer Server Actions for mutations triggered from forms.
+- Disable submit while pending (`useFormStatus` or local `isSubmitting` state).
+- Show user-visible error on failure; revalidate or refresh data on success.
+
+LIST PAGES (when applicable)
+- Server-side pagination via `.range()` / `.limit()` in Supabase query.
+- Debounce client search (e.g. 300ms) when filtering client-side.
+
+VERIFICATION (mandatory after scaffold — Rule 43)
+- Run: `npm run lint` + `npm run build`
+- Record Target Output + Verification Report in `docs/ai/CHANGE_CHECKLIST.md`
+- See `docs/ai/TARGET_OUTPUT_VERIFICATION.md`

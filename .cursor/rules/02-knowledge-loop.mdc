@@ -1,0 +1,30 @@
+---
+description: Knowledge loop (wajib update docs setelah fix/build)
+alwaysApply: true
+---
+
+Every meaningful change must improve future work.
+
+MANDATORY DOC UPDATES (same diff) when:
+- You fixed a bug (any runtime/TS/build issue)
+- You discovered a new failure mode (e.g. RLS 403, infinite loading, server/client client mixup)
+- You changed generator patterns or added new module scaffolding
+- You changed cross-module business logic (schema, RPC, shared data access)
+
+Update at least ONE of:
+- `docs/ai/ERROR_FIX_LOG.md` (for bug fixes)
+- `docs/ai/GENERATOR_RULES.md` + `docs/ai/CHANGE_CHECKLIST.md` (for scaffolding & prevention)
+- `docs/ai/CROSS_MODULE_IMPACT_TEMPLATE.md` (for impact mapping baseline)
+
+Every code change MUST also update `docs/ai/CHANGE_CHECKLIST.md` § **Target Output Verification Gate** with commands run, expected vs actual, and PASS/FAIL (Rule 43).
+
+ENTRY TEMPLATE (copy/paste)
+## YYYY-MM-DD — <short title>
+- Symptom:
+- Root cause:
+- Fix:
+- Prevention update (what rule/generator/checklist changed so this doesn't repeat):
+- Files touched:
+- Verification (commands + expected result + **PASS/FAIL** — Rule 43 / `docs/ai/TARGET_OUTPUT_VERIFICATION.md`):
+
+If the fix implies a generator should scaffold something differently, update `GENERATOR_RULES.md` (not only the log).

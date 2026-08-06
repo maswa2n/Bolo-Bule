@@ -1,0 +1,48 @@
+---
+description: Hard gate analisis dampak lintas modul sebelum implementasi
+alwaysApply: true
+---
+
+# Cross-Module Impact Gate (Hard)
+
+Wajib untuk setiap perubahan fitur/logic/query/schema:
+
+1) Sebelum edit, buat **Impact Plan** yang memuat:
+- Modul pemicu perubahan
+- Daftar modul relasi terdampak (app routes, lib, supabase, docs)
+- Risiko jika modul relasi tidak disesuaikan
+
+2) Agent wajib melakukan pencarian relasi kode (symbol/RPC/table) untuk menentukan dampak.
+Jangan hanya patch 1 file jika ada konsumen lain dari logic yang sama.
+
+3) Untuk perubahan pada schema/RPC/shared data access:
+- Wajib cek modul relasi minimal:
+  - `src/lib/**`
+  - `src/app/**`
+  - `src/components/**`
+  - `supabase/functions/**`
+  - `supabase/migrations/**`
+  - `docs/ai/**` (checklist/log pencegahan)
+
+3b) Untuk perubahan **hardened RPC**, **workflow state-transition**, atau **modul saudara (sibling parity)**:
+- Wajib klasifikasi dulu (Rule 32): RLS-bypass DEFINER, state-transition, sibling pair, type-sensitive return.
+- **Sibling parity** — grep symbol/RPC/table; patch semua saudara dalam task yang sama ATAU Impact Follow-up eksplisit.
+- **Rewrite preservation** — ikuti Rule 32 § RPC rewrite preservation gate.
+- **Verifikasi:** Rule 43 — smoke setiap transisi status kritis + stuck-state query.
+
+4) Jika ada modul terdampak, agent harus:
+- Menyesuaikan modul tersebut pada task yang sama, ATAU
+- Menuliskan TODO terstruktur "Impact Follow-up" dengan alasan kenapa ditunda.
+
+5) Final response wajib berisi **Impact Report**:
+- Changed modules
+- Verified dependent modules
+- Follow-up modules (jika ada) + risiko
+
+6) Final response wajib berisi **Verification Report** (Rule 43):
+- Target output + acceptance criteria
+- Commands run + exit codes
+- Expected vs actual per criterion
+- Status: PASS | FAIL | MANUAL_PENDING
+
+7) Jangan menutup task sebagai "selesai" jika masih ada modul relasi kritikal yang belum diverifikasi ATAU verifikasi otomatis FAIL.

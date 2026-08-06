@@ -1,0 +1,37 @@
+---
+description: Error fix playbook (no trial-and-error, minimal reads, update logs)
+alwaysApply: true
+---
+
+Use this rule when fixing build/runtime/TS errors.
+
+INPUTS REQUIRED (from user)
+- full error log / stack trace
+- where it happens (page/module)
+- reproduce steps (or the failing command)
+- expected vs actual
+
+PROCESS (no trial-and-error)
+1) Identify the exact failure location (file + line).
+2) Open only the referenced file(s) first.
+3) Confirm contract mismatches (types, JSON shapes, auth, Supabase bigint/numeric, server vs client boundary).
+4) Patch minimal diff.
+5) Define target output (expected behavior after fix) and **run** verification — Rule 43:
+   - App: `npm run lint` + `npm run build`
+   - SQL/RPC: MCP `execute_sql` smoke per `docs/ai/TARGET_OUTPUT_VERIFICATION.md`
+6) Do NOT claim done if verification FAILs. Record Verification Report + update `docs/ai/CHANGE_CHECKLIST.md` § Target Output Verification Gate.
+7) Mandatory: update `docs/ai/ERROR_FIX_LOG.md` entry + prevention note (include commands run + PASS/FAIL).
+
+COMMON FAILURES (repo-specific)
+- Supabase 403 / empty data:
+  - Likely RLS policy or wrong auth context.
+  - Fix: migrations/policies; verify server client vs browser client.
+- Server/client import error (`next/headers` in client component):
+  - Fix: move Supabase call to Server Component, Server Action, or Route Handler.
+- BigInt/NUMERIC typing bugs:
+  - Convert in `src/lib/**` data layer, not in UI.
+- Infinite loading:
+  - Missing `finally` or early return before setting loading false.
+  - Fix: `finally { setIsLoading(false) }` and consistent error state.
+- Hydration mismatch:
+  - Check Server vs Client Component boundary; avoid non-deterministic render in Server Components.

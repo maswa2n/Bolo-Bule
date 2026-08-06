@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Environment (never commit secrets)
+.env
+.env.local
+.env.*.local
+
+# Supabase local/temp
+supabase/.temp/
+supabase/.branches/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+*.log
+
+# Build output
+dist/
+build/
+.next/
+out/
+
+# Cursor MCP (may contain tokens)
+.cursor/mcp.json
+.cursor/mcp-supabase-projects.json
+
+# Supabase CLI link cache
+supabase/.temp/
+
+# Accidental nested clone (do not commit)
+Bolo-Bule/

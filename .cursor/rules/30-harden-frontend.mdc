@@ -1,0 +1,25 @@
+---
+description: Frontend hardening (anti infinite loading, server/client boundary, type normalization)
+globs:
+  - src/app/**/*.tsx
+  - src/components/**/*.tsx
+  - src/lib/**/*.ts
+alwaysApply: true
+---
+
+Hardening rules for any frontend change.
+
+- Never leave `isLoading` stuck. Every async path in Client Components MUST set loading false in `finally`.
+- Never swallow errors silently in Client Components. Surface user-visible error state or message.
+- Keep DB shape normalization in `src/lib/**` or Server Components:
+  - `NUMERIC` → number
+  - bigint string → number
+  - JSON string → parse safely
+- Client Components should NOT call Supabase directly unless the repo already does in that specific area.
+- Prefer Server Components for initial data fetch; pass props to interactive Client Components.
+- Keep UI responsive:
+  - debounce search (300ms) when client-filtering
+  - disable buttons on submit
+  - show empty/error states instead of blank.
+- Do **not** add `"use client"` at page level unless the entire page needs client hooks.
+- Do **not** create duplicate `Foo.js` alongside `Foo.ts`/`Foo.tsx` under `src/`.
