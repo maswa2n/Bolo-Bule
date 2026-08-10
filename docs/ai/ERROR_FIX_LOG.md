@@ -2,6 +2,14 @@
 
 _(Add entries newest first. Use template from Rule 02 / `.cursor/rules/02-knowledge-loop.mdc`.)_
 
+## 2026-08-10 — Mobile coach voice tidak bersuara (iOS Safari TTS)
+- **Symptom:** Tombol "Play coach audio" di `/practice` tidak menghasilkan suara saat dibuka di browser handphone (terutama iPhone Safari).
+- **Root cause:** `speakCoachWithBrowserTts()` melakukan `await getCoachBrowserVoice()` sebelum `speechSynthesis.speak()`, sehingga iOS Safari memutus user-gesture chain dan memblokir output audio secara silent.
+- **Fix:** Tambah `speakCoachSync()` (speak sinkron dalam handler tap), `primeCoachBrowserTts()` + `primeMobileCoachAudio()` pada interaksi pertama; prefetch cloud MP3 via edge function `coach-tts` + route `/api/coach-tts`; fallback otomatis ke browser TTS.
+- **Prevention update:** TTS mobile wajib speak sinkron dalam event handler; async voice loading hanya untuk prefetch; cloud TTS via Supabase edge function + `<audio>` untuk kualitas konsisten.
+- **Files touched:** `src/lib/ai/tts.ts`, `src/lib/ai/coach-audio-player.ts`, `src/components/practice/SpeakingSession.tsx`, `src/app/api/coach-tts/route.ts`, `supabase/functions/coach-tts/index.ts`, `tsconfig.json`, `docs/ai/*`
+- **Verification:** MCP deploy `coach-tts` ACTIVE (PASS); `npm run lint` + `npm run build` (PASS). Manual iPhone/Android audio (MANUAL_PENDING).
+
 ## 2026-08-10 — Vercel build: /practice Dynamic server usage (cookies)
 - **Symptom:** Vercel production build log: `[listPublishedCases] Unexpected error: Dynamic server usage: Route /practice couldn't be rendered statically because it used cookies`.
 - **Root cause:** `listPublishedCases()` memanggil `createClient()` dari `@/lib/supabase/server` yang memakai `cookies()` dari `next/headers`. Next.js 15 mencoba pre-render `/practice` secara statis saat build; pemanggilan `cookies()` memicu `DYNAMIC_SERVER_USAGE`.

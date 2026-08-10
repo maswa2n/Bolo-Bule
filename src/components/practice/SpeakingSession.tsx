@@ -1,9 +1,14 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { translateSupportOptionAction } from "@/app/(app)/practice/phrase-actions";
+import {
+  playCoachAudio,
+  prefetchCoachAudio,
+  primeMobileCoachAudio,
+  revokeCoachAudioCache,
+} from "@/lib/ai/coach-audio-player";
 import { transcribeVoiceInput } from "@/lib/ai/stt";
-import { speakCoachWithBrowserTts } from "@/lib/ai/tts";
 import {
   getResponseSupportGuide,
   type ResponseSupportGuide,
@@ -122,6 +127,7 @@ export function SpeakingSession({ activeCase, targetTurns, onSubmitTurn, onRevis
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const audioPrimedRef = useRef(false);
 
   const caseTurn = activeCase.turns[turnIndex] ?? null;
   const fallbackPrompt =
@@ -162,6 +168,33 @@ export function SpeakingSession({ activeCase, targetTurns, onSubmitTurn, onRevis
   const canReviseContext =
     sessionTurnCount > 0 && trimmedLearnerContext.length > 0 && hasContextRevision;
 
+  useEffect(() => {
+    const primeOnce = () => {
+      if (audioPrimedRef.current) return;
+      audioPrimedRef.current = true;
+      primeMobileCoachAudio();
+    };
+
+    window.addEventListener("pointerdown", primeOnce, { passive: true });
+    window.addEventListener("touchstart", primeOnce, { passive: true });
+
+    return () => {
+      window.removeEventListener("pointerdown", primeOnce);
+      window.removeEventListener("touchstart", primeOnce);
+      revokeCoachAudioCache();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!prompt.trim()) return;
+    void prefetchCoachAudio(prompt);
+  }, [prompt]);
+
+  useEffect(() => {
+    if (!selectedGuide?.english.trim()) return;
+    void prefetchCoachAudio(selectedGuide.english);
+  }, [selectedGuide?.english]);
+
   function clearSelectedSupportGuide() {
     setSelectedSupportOption(null);
     setSelectedGuide(null);
@@ -201,7 +234,11 @@ export function SpeakingSession({ activeCase, targetTurns, onSubmitTurn, onRevis
   }
 
   function speak(text: string) {
-    void speakCoachWithBrowserTts(text);
+    primeMobileCoachAudio();
+    const started = playCoachAudio(text);
+    if (!started) {
+      setErrorMessage("Audio coach tidak tersedia di browser ini. Silakan baca teks pertanyaan.");
+    }
   }
 
   function startRecording() {

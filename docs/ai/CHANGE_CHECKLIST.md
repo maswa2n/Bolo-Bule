@@ -63,6 +63,29 @@ Apply whenever a migration **rewrites an existing RPC** that was previously hard
 
 ## Entries
 
+## 2026-08-10 — Mobile coach voice (TTS) tidak bersuara di handphone
+- **Target output:** Tombol "Play coach audio" / "Dengarkan pelafalan" di `/practice` menghasilkan suara di browser mobile (iOS Safari + Android Chrome); fallback browser TTS tetap jalan tanpa cloud key.
+- **Surface:** frontend + server + edge
+- **Acceptance criteria:**
+  - [x] `speakCoachSync()` memanggil `speechSynthesis.speak()` sinkron dalam handler tap (fix iOS gesture chain)
+  - [x] Audio dipriming pada interaksi pertama (`pointerdown`/`touchstart`) + prefetch cloud MP3 saat prompt berubah
+  - [x] Edge function `coach-tts` deployed (OpenAI TTS when `TTS_OPENAI_API_KEY`/`OPENAI_API_KEY` set)
+  - [x] Route `/api/coach-tts` proxy binary audio dari edge function
+  - [x] Fallback ke browser TTS jika cloud TTS 503
+- **Auto verification (agent runs):**
+  - [x] MCP `get_project_url` → `iuzvtttsjnlwtoegrsve.supabase.co` → PASS
+  - [x] MCP `list_edge_functions` → `coach-tts` ACTIVE v1 → PASS
+  - [x] MCP `get_logs` edge-function → no 500 burst on deploy → PASS
+  - [x] `npm run lint` → exit 0
+  - [x] `npm run build` → exit 0
+- **Manual verification (if needed):**
+  - [ ] iPhone Safari: tap layar sekali → Play coach audio → suara keluar
+  - [ ] Android Chrome: Play coach audio + Dengarkan pelafalan → suara keluar
+  - [ ] Optional: set Supabase secret `TTS_OPENAI_API_KEY` → prefetch returns MP3 → cloud audio plays
+- **522 gate:** N/A (single-text TTS, max 600 chars, no heavy RPC)
+- **Results:** Root cause async TTS before speak on iOS fixed; hybrid playback (cached MP3 + sync browser TTS); edge function live.
+- **Status:** MANUAL_PENDING (mobile device audio smoke)
+
 ## 2026-08-10 — Vercel /practice Dynamic server usage (cookies)
 - **Target output:** Build production Vercel berhasil tanpa error `Dynamic server usage` di route `/practice`; halaman menampilkan published cases dari Supabase.
 - **Surface:** server (Next.js SSG + Supabase data layer)
