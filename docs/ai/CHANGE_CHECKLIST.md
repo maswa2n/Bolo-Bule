@@ -429,6 +429,20 @@ Apply whenever a migration **rewrites an existing RPC** that was previously hard
 - **Results:** Root cause PGRST201 ambiguous embed; fixed FK hint in case-repository.
 - **Status:** MANUAL_PENDING (user refresh /practice)
 
+## 2026-08-10 — Landing page Linear-inspired UI (preview → Next.js)
+- **Target output:** Halaman depan `/` dan `/login` memakai layout konsep `docs/preview/bolo-bule-linear-concept.html`: nav minimal, hero kiri, auth panel kanan (tab Masuk/Buat akun), gradasi transparansi + watermark logo.
+- **Surface:** frontend
+- **Acceptance criteria:**
+  - [x] Shared `LandingPage` untuk `(marketing)/page.tsx` dan `login/page.tsx`
+  - [x] Satu titik auth: tab Masuk | Buat akun + submit + link switch (tanpa CTA duplikat)
+  - [x] Gradasi box + watermark logo (`bb-landing-*` di `globals.css`)
+  - [x] Hero/steps/proof berubah via `?mode=signin|signup`
+- **Auto verification (agent runs):**
+  - [x] `npm run lint` → exit 0
+  - [x] `npm run build` → exit 0
+- **Results:** lint/build PASS; komponen baru `src/components/marketing/*`, `LoginForm` disederhanakan.
+- **Status:** PASS (build); MANUAL_PENDING (browser smoke `/` dan `/login`)
+
 ## 2026-08-08 — MCP multi-project switch (Bolo Bule + CMMS-Bus)
 - **Target output:** Agent dan user bisa switch MCP Supabase per workspace tanpa hapus koneksi global; Bolo Bule pakai `supabase-bolo-bule` → `iuzvtttsjnlwtoegrsve`.
 - **Surface:** deploy (Cursor MCP config + scripts)
@@ -443,6 +457,36 @@ Apply whenever a migration **rewrites an existing RPC** that was previously hard
   - MCP `get_project_url` on `project-0-Bolo Bule-supabase-bolo-bule` → `iuzvtttsjnlwtoegrsve`
 - **Results:** Project-scoped MCP isolated; global `user-supabase` may coexist for CMMS OAuth — agents must use project server key per rule 44.
 - **Status:** PASS (script); MANUAL_PENDING (user Reload Window after Open Folder)
+
+## 2026-08-10 — Remove /today page (redirect to /learn)
+- **Target output:** Halaman Hari Ini dihapus; nav dan link diarahkan ke `/learn`; cache build dibersihkan.
+- **Surface:** frontend | server
+- **Acceptance criteria:**
+  - [x] `src/app/(app)/today/page.tsx` dihapus
+  - [x] Nav AppShell tanpa "Hari Ini"
+  - [x] `/today` redirect permanent ke `/learn`
+  - [x] `getTodayCockpitSummary` dihapus; `revalidatePath("/today")` dihapus
+  - [x] `.next` cache dihapus
+- **Auto verification:** `npm run lint` + `npm run build`; MCP `get_project_url` → iuzvtttsjnlwtoegrsve
+- **Status:** PASS
+
+## 2026-08-10 — Data-driven speaking skill report (preview → app)
+- **Target output:** Raport skill berbicara dari kumpulan latihan user — data-driven di `/learn`; cockpit `/today` wired ke data nyata Supabase.
+- **Surface:** frontend | server
+- **Acceptance criteria:**
+  - [x] `/learn` menampilkan radar 6 dimensi, insight, remedial queue, riwayat sesi/turn dari DB
+  - [x] `/today` kartu Next Session / Remedial / Momentum dari `getSpeakingSkillReport()` bukan hardcoded
+  - [x] Agregasi multi-sesi user: dimensions, mastery, session history, weekly momentum
+  - [x] API `/api/speaking-report` tetap expose JSON report
+- **Auto verification (agent runs):**
+  - [x] `npm run lint` → exit 0
+  - [x] `npm run build` → exit 0
+  - [x] MCP `execute_sql` aggregate sessions/scores → 1 session, 3 turns, avg task 58, fluency 76.3
+- **Manual verification (if needed):**
+  - [ ] Login → `/learn` → radar + transkrip OB1 muncul
+  - [ ] `/today` → case title Evaluasi Kinerja, skor 70, remedial OB1/OB2
+- **Results:** Report lib aggregates all user sessions; UI matches preview design; MCP confirms data shape.
+- **Status:** PASS (build); MANUAL_PENDING (browser smoke)
 
 ## 2026-08-10 — Speaking session button placement UX
 - **Target output:** Play coach audio di samping pertanyaan coach; Start voice input di samping panduan pelafalan; label pilihan jawaban sistem.

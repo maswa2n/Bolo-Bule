@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bolo Bule — Speaking Skill Report (Preview)</title>
+  <style>
+    :root {
+      --bg: #f6f9ff;
+      --fg: #0f2448;
+      --primary: #0d62ff;
+      --primary-dark: #0b53dc;
+      --cyan: #0ea5e9;
+      --surface: rgba(255,255,255,0.92);
+      --border: rgba(15,36,72,0.1);
+      --success: #059669;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(255,101,40,0.18), transparent 30%),
+        radial-gradient(circle at 85% 20%, rgba(0,195,255,0.16), transparent 32%),
+        linear-gradient(130deg, #061b44 0%, #0f3f96 45%, #05b5df 100%);
+      min-height: 100vh;
+      color: var(--fg);
+      padding: 24px 16px 48px;
+    }
+    .wrap { max-width: 960px; margin: 0 auto; }
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.2);
+      color: #e0f2fe;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+    .hero {
+      background: linear-gradient(135deg, rgba(13,98,255,0.95), rgba(14,165,233,0.88));
+      border-radius: 24px;
+      padding: 28px 24px;
+      color: white;
+      margin-bottom: 20px;
+      box-shadow: 0 20px 50px rgba(6,27,68,0.35);
+    }
+    .hero h1 { font-size: clamp(1.4rem, 4vw, 2rem); margin: 8px 0; line-height: 1.25; }
+    .hero p { opacity: 0.9; font-size: 0.95rem; line-height: 1.5; max-width: 640px; }
+    .hero-meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 20px; }
+    .hero-stat { background: rgba(255,255,255,0.15); border-radius: 12px; padding: 12px 16px; min-width: 100px; }
+    .hero-stat .label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.8; }
+    .hero-stat .value { font-size: 1.6rem; font-weight: 700; margin-top: 2px; }
+    .grid { display: grid; gap: 16px; }
+    @media (min-width: 720px) {
+      .grid-2 { grid-template-columns: 1fr 1fr; }
+      .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 24px rgba(15,36,72,0.06);
+    }
+    .card h2 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      margin-bottom: 14px;
+    }
+    .card h3 { font-size: 1.05rem; margin-bottom: 8px; }
+    .insight {
+      border-left: 3px solid var(--primary);
+      padding: 10px 14px;
+      margin-bottom: 10px;
+      background: #eff6ff;
+      border-radius: 0 10px 10px 0;
+    }
+    .insight.gap { border-color: var(--warning); background: #fffbeb; }
+    .insight.strength { border-color: var(--success); background: #ecfdf5; }
+    .insight.pattern { border-color: var(--cyan); background: #ecfeff; }
+    .insight-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
+    .insight-body { font-size: 0.85rem; color: #475569; line-height: 1.45; }
+    .dim-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .dim-label { width: 130px; font-size: 0.82rem; flex-shrink: 0; }
+    .dim-track { flex: 1; height: 10px; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
+    .dim-fill { height: 100%; border-radius: 999px; transition: width 0.6s ease; }
+    .dim-fill.high { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+    .dim-fill.med { background: linear-gradient(90deg, #eab308, #f59e0b); }
+    .dim-fill.low { background: linear-gradient(90deg, #22c55e, #0ea5e9); }
+    .dim-score { width: 44px; text-align: right; font-weight: 700; font-size: 0.85rem; }
+    .dim-trend { font-size: 0.72rem; color: #64748b; width: 36px; }
+    .obj-item {
+      display: flex; gap: 12px; align-items: flex-start;
+      padding: 12px 0; border-bottom: 1px solid #f1f5f9;
+    }
+    .obj-item:last-child { border-bottom: none; }
+    .obj-status {
+      width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      font-size: 14px; flex-shrink: 0;
+    }
+    .obj-status.done { background: #d1fae5; }
+    .obj-status.progress { background: #fef3c7; }
+    .obj-status.todo { background: #fee2e2; }
+    .obj-code { font-weight: 700; font-size: 0.9rem; }
+    .obj-desc { font-size: 0.82rem; color: #64748b; margin-top: 2px; }
+    .obj-meta { font-size: 0.75rem; color: #94a3b8; margin-top: 4px; }
+    .turn {
+      border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 10px;
+    }
+    .turn-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .turn-num { font-weight: 700; font-size: 0.8rem; color: var(--primary); }
+    .turn-score { font-weight: 700; font-size: 0.9rem; }
+    .turn-quote {
+      font-style: italic; color: #334155; font-size: 0.9rem; line-height: 1.45;
+      border-left: 3px solid var(--cyan); padding-left: 12px;
+    }
+    .remedial {
+      display: flex; gap: 12px; align-items: flex-start;
+      padding: 12px; background: #fff7ed; border-radius: 12px; margin-bottom: 8px;
+      border: 1px solid #fed7aa;
+    }
+    .remedial-num {
+      width: 24px; height: 24px; background: var(--warning); color: white;
+      border-radius: 6px; display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 700; flex-shrink: 0;
+    }
+    .tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .tag { font-size: 0.72rem; padding: 4px 8px; background: #f1f5f9; border-radius: 6px; color: #475569; }
+    .radar-wrap { display: flex; justify-content: center; padding: 8px 0; }
+    .cta {
+      display: inline-block; margin-top: 16px; padding: 12px 20px;
+      background: white; color: var(--primary-dark); font-weight: 700;
+      border-radius: 12px; text-decoration: none; font-size: 0.9rem;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+    }
+    .footer {
+      text-align: center; margin-top: 24px; font-size: 0.75rem; color: rgba(255,255,255,0.7);
+    }
+    .source-note {
+      font-size: 0.72rem; color: #94a3b8; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e2e8f0;
+    }
+    .loading { text-align: center; padding: 60px; color: white; }
+  </style>
+</head>
+<body>
+  <div class="wrap" id="app">
+    <div class="loading">Memuat raport dari data Supabase…</div>
+  </div>
+
+  <script>
+    /* Fallback snapshot — real data from Supabase Bolo Bule (2026-08-10) */
+    const FALLBACK_REPORT = {
+      generatedAt: "2026-08-10T10:22:00.000Z",
+      learnerName: "maswa2n.oye1",
+      session: {
+        id: 1,
+        status: "in_progress",
+        caseTitleEn: "Performance Review: Root Cause Analysis and Corrective Action Planning",
+        caseTitleId: "Evaluasi Kinerja: Analisis Akar Masalah dan Perencanaan Tindakan Perbaikan",
+        cefrLevel: "B1",
+        communicationGoal: "To conduct a performance review focusing on root cause analysis and corrective action planning.",
+        turnCount: 3,
+        targetTurns: 6,
+        averageScore: 70,
+        startedAt: "2026-08-09T09:06:12.556Z"
+      },
+      dimensions: [
+        { key: "task_completion", label: "Task completion", labelId: "Pencapaian tugas", score: 58, trend: 0, priority: "high" },
+        { key: "grammar", label: "Grammar", labelId: "Tata bahasa", score: 78, trend: 0, priority: "low" },
+        { key: "vocabulary", label: "Vocabulary", labelId: "Kosakata", score: 65, trend: 0, priority: "medium" },
+        { key: "fluency", label: "Fluency", labelId: "Kelancaran", score: 76.3, trend: 2, priority: "low" },
+        { key: "clarity", label: "Clarity", labelId: "Kejelasan", score: 70, trend: 12, priority: "medium" },
+        { key: "professional_tone", label: "Professional tone", labelId: "Nada profesional", score: 72, trend: 0, priority: "medium" }
+      ],
+      objectives: [
+        { code: "OB1", description: "Identify and articulate the root causes of performance issues.", required: true, completed: false, detectedCount: 3, lastTurnNumber: 3, masteryScore: 72, status: "in_progress" },
+        { code: "OB2", description: "Develop a realistic corrective action plan with measurable targets.", required: true, completed: false, detectedCount: 0, lastTurnNumber: null, masteryScore: null, status: "not_started" }
+      ],
+      turns: [
+        { turnNumber: 1, transcript: "I had unclear expectations from the TV", targetObjective: "OB1", objectiveDetected: true, objectiveCompleted: false, overallScore: 69, scores: { task_completion: 58, grammar: 78, vocabulary: 65, fluency: 76, clarity: 66, professional_tone: 72 } },
+        { turnNumber: 2, transcript: "I was unsure of the priorities", targetObjective: "OB1", objectiveDetected: true, objectiveCompleted: false, overallScore: 69, scores: { task_completion: 58, grammar: 78, vocabulary: 65, fluency: 75, clarity: 66, professional_tone: 72 } },
+        { turnNumber: 3, transcript: "I was juggling multiple tasks without clear guidance", targetObjective: "OB1", objectiveDetected: true, objectiveCompleted: false, overallScore: 72, scores: { task_completion: 58, grammar: 78, vocabulary: 65, fluency: 78, clarity: 78, professional_tone: 72 } }
+      ],
+      remedialQueue: [
+        { priority: 1, title: "OB1", reason: "Terdeteksi tapi belum completed", action: "Identify and articulate the root causes of performance issues." },
+        { priority: 2, title: "OB2", reason: "Belum pernah muncul di sesi", action: "Develop a realistic corrective action plan with measurable targets." },
+        { priority: 3, title: "Pencapaian tugas", reason: "Skor 58/100 — prioritas remedial", action: "Latihan terfokus: Task completion" },
+        { priority: 4, title: "Kosakata", reason: "Skor 65/100 — prioritas remedial", action: "Latihan terfokus: Vocabulary" }
+      ],
+      insights: [
+        { type: "pattern", title: "Pola fluency vs task gap", body: "Kelancaran (76) lebih tinggi dari pencapaian tugas (58). Pola umum learner Indonesia: terdengar lancar, tapi belum memenuhi tujuan komunikasi scenario." },
+        { type: "gap", title: "Kosakata workplace perlu diperkuat", body: "Skor vocabulary 65/100. Latih frasa fungsional scenario ini sebelum sesi berikutnya." },
+        { type: "next_step", title: "Objective belum dimulai", body: "OB2 belum terdeteksi. Sesi berikutnya fokus ke: Develop a realistic corrective action plan with measurable targets." },
+        { type: "strength", title: "Kekuatan: Tata bahasa", body: "Grammar (78) stabil." },
+        { type: "next_step", title: "Satu aksi terbaik hari ini", body: "Lanjutkan \"Evaluasi Kinerja: Analisis Akar Masalah dan Perencanaan Tindakan Perbaikan\" — 3/6 turn selesai." }
+      ],
+      languageTargets: {
+        grammar: ["Use of modal verbs for suggestions (e.g., could, should, might)", "Conditional sentences for hypothetical scenarios", "Present perfect continuous for ongoing issues"],
+        vocabulary: ["Performance metrics", "Root cause analysis", "Corrective action", "KPIs", "Task prioritization", "Stakeholder expectations"],
+        functional: ["Giving constructive feedback", "Discussing performance issues", "Action planning", "Follow-up scheduling"]
+      },
+      kpis: { sessionCompletionRate: 0, averageSessionScore: 0, activeLearners7d: 1, inProgressScore: 70 }
+    };
+
+    function fillClass(priority) {
+      if (priority === "high") return "high";
+      if (priority === "medium") return "med";
+      return "low";
+    }
+
+    function objIcon(status) {
+      if (status === "done") return { cls: "done", icon: "✓" };
+      if (status === "in_progress") return { cls: "progress", icon: "…" };
+      return { cls: "todo", icon: "!" };
+    }
+
+    function drawRadar(dimensions, size) {
+      const cx = size / 2, cy = size / 2, r = size * 0.36;
+      const n = dimensions.length;
+      const points = dimensions.map((d, i) => {
+        const angle = (Math.PI * 2 * i) / n - Math.PI / 2;
+        const dist = (d.score / 100) * r;
+        return [cx + Math.cos(angle) * dist, cy + Math.sin(angle) * dist];
+      });
+      const gridLevels = [0.25, 0.5, 0.75, 1];
+      let svg = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">`;
+      gridLevels.forEach(lvl => {
+        const gp = dimensions.map((_, i) => {
+          const angle = (Math.PI * 2 * i) / n - Math.PI / 2;
+          return [cx + Math.cos(angle) * r * lvl, cy + Math.sin(angle) * r * lvl];
+        });
+        svg += `<polygon points="${gp.map(p => p.join(",")).join(" ")}" fill="none" stroke="#cbd5e1" stroke-width="1"/>`;
+      });
+      dimensions.forEach((d, i) => {
+        const angle = (Math.PI * 2 * i) / n - Math.PI / 2;
+        const lx = cx + Math.cos(angle) * (r + 22);
+        const ly = cy + Math.sin(angle) * (r + 22);
+        svg += `<line x1="${cx}" y1="${cy}" x2="${cx + Math.cos(angle) * r}" y2="${cy + Math.sin(angle) * r}" stroke="#e2e8f0" stroke-width="1"/>`;
+        svg += `<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" font-size="9" fill="#64748b">${d.labelId.split(" ")[0]}</text>`;
+      });
+      svg += `<polygon points="${points.map(p => p.join(",")).join(" ")}" fill="rgba(13,98,255,0.25)" stroke="#0d62ff" stroke-width="2"/>`;
+      points.forEach(p => { svg += `<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="#0d62ff"/>`; });
+      svg += "</svg>";
+      return svg;
+    }
+
+    function formatDate(iso) {
+      return new Date(iso).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+    }
+
+    function render(report, source) {
+      const s = report.session;
+      const displayScore = s ? (s.status === "in_progress" ? s.averageScore : report.kpis.averageSessionScore) : 0;
+      const progressPct = s ? Math.round((s.turnCount / s.targetTurns) * 100) : 0;
+
+      document.getElementById("app").innerHTML = `
+        <section class="hero">
+          <span class="badge">Speaking Skill Report</span>
+          <span class="badge">Data-driven</span>
+          <span class="badge">${s ? s.cefrLevel : "—"} · Speaking</span>
+          <h1>Raport Skill Berbicara — ${report.learnerName}</h1>
+          <p>${s ? s.caseTitleId : "Belum ada sesi latihan."}</p>
+          <div class="hero-meta">
+            <div class="hero-stat">
+              <div class="label">Skor sesi</div>
+              <div class="value">${displayScore}<span style="font-size:0.9rem;opacity:0.8">/100</span></div>
+            </div>
+            <div class="hero-stat">
+              <div class="label">Progress turn</div>
+              <div class="value">${s ? s.turnCount + "/" + s.targetTurns : "—"}</div>
+            </div>
+            <div class="hero-stat">
+              <div class="label">Completion</div>
+              <div class="value">${progressPct}%</div>
+            </div>
+            <div class="hero-stat">
+              <div class="label">Status</div>
+              <div class="value" style="font-size:1rem">${s ? s.status.replace("_", " ") : "—"}</div>
+            </div>
+          </div>
+          ${s ? `<a class="cta" href="/practice">Lanjutkan latihan →</a>` : ""}
+        </section>
+
+        <div class="grid grid-2" style="margin-bottom:16px">
+          <section class="card">
+            <h2>Insight untuk peningkatan</h2>
+            ${report.insights.map(i => `
+              <div class="insight ${i.type === "gap" ? "gap" : i.type === "strength" ? "strength" : i.type === "pattern" ? "pattern" : ""}">
+                <div class="insight-title">${i.title}</div>
+                <div class="insight-body">${i.body}</div>
+              </div>
+            `).join("")}
+          </section>
+
+          <section class="card">
+            <h2>Radar 6 dimensi speaking</h2>
+            <div class="radar-wrap">${drawRadar(report.dimensions, 260)}</div>
+            ${report.dimensions.map(d => `
+              <div class="dim-row">
+                <span class="dim-label">${d.labelId}</span>
+                <div class="dim-track"><div class="dim-fill ${fillClass(d.priority)}" style="width:${d.score}%"></div></div>
+                <span class="dim-score">${Math.round(d.score)}</span>
+                <span class="dim-trend">${d.trend > 0 ? "+" + d.trend : d.trend < 0 ? d.trend : ""}</span>
+              </div>
+            `).join("")}
+          </section>
+        </div>
+
+        <div class="grid grid-2" style="margin-bottom:16px">
+          <section class="card">
+            <h2>Progress objective</h2>
+            ${report.objectives.map(o => {
+              const st = objIcon(o.status);
+              return `
+                <div class="obj-item">
+                  <div class="obj-status ${st.cls}">${st.icon}</div>
+                  <div>
+                    <div class="obj-code">${o.code}${o.masteryScore != null ? ` · mastery ${o.masteryScore}%` : ""}</div>
+                    <div class="obj-desc">${o.description}</div>
+                    <div class="obj-meta">Terdeteksi ${o.detectedCount}x${o.lastTurnNumber ? ` · turn terakhir #${o.lastTurnNumber}` : ""}</div>
+                  </div>
+                </div>`;
+            }).join("")}
+          </section>
+
+          <section class="card">
+            <h2>Remedial queue (prioritas)</h2>
+            ${report.remedialQueue.map(r => `
+              <div class="remedial">
+                <div class="remedial-num">${r.priority}</div>
+                <div>
+                  <strong>${r.title}</strong> — ${r.reason}
+                  <div style="font-size:0.82rem;color:#78716c;margin-top:4px">${r.action}</div>
+                </div>
+              </div>
+            `).join("")}
+          </section>
+        </div>
+
+        <section class="card" style="margin-bottom:16px">
+          <h2>Riwayat turn & transkrip</h2>
+          ${report.turns.map(t => `
+            <div class="turn">
+              <div class="turn-head">
+                <span class="turn-num">Turn ${t.turnNumber} → ${t.targetObjective ?? "—"}</span>
+                <span class="turn-score">${t.overallScore}/100</span>
+              </div>
+              <div class="turn-quote">"${t.transcript}"</div>
+              <div class="tag-list">
+                <span class="tag">Task ${t.scores.task_completion}</span>
+                <span class="tag">Grammar ${t.scores.grammar}</span>
+                <span class="tag">Vocab ${t.scores.vocabulary}</span>
+                <span class="tag">Fluency ${t.scores.fluency}</span>
+                <span class="tag">Clarity ${t.scores.clarity}</span>
+              </div>
+            </div>
+          `).join("")}
+        </section>
+
+        <section class="card">
+          <h2>Target bahasa scenario ini</h2>
+          <h3>Grammar</h3>
+          <div class="tag-list">${report.languageTargets.grammar.map(g => `<span class="tag">${g}</span>`).join("")}</div>
+          <h3 style="margin-top:14px">Vocabulary</h3>
+          <div class="tag-list">${report.languageTargets.vocabulary.map(v => `<span class="tag">${v}</span>`).join("")}</div>
+          <h3 style="margin-top:14px">Functional language</h3>
+          <div class="tag-list">${report.languageTargets.functional.map(f => `<span class="tag">${f}</span>`).join("")}</div>
+          <p class="source-note">Generated ${formatDate(report.generatedAt)} · Source: ${source}</p>
+        </section>
+
+        <p class="footer">Bolo Bule — Preview raport data-driven untuk peningkatan skill speaking</p>
+      `;
+    }
+
+    async function loadReport() {
+      try {
+        const res = await fetch("/api/speaking-report", { credentials: "include" });
+        if (res.ok) {
+          const data = await res.json();
+          render(data, "Live API /api/speaking-report");
+          return;
+        }
+      } catch (_) { /* offline or file:// */ }
+      render(FALLBACK_REPORT, "Supabase snapshot (fallback embedded)");
+    }
+
+    loadReport();
+  </script>
+</body>
+</html>

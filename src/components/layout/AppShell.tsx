@@ -14,7 +14,6 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  { href: "/today", label: "Hari Ini" },
   { href: "/learn", label: "Belajar" },
   { href: "/practice", label: "Latihan" },
   { href: "/cases", label: "Admin Cases", mobileLabel: "Admin" },

@@ -248,7 +248,6 @@ export async function evaluateWritingAction(payload: { caseVersionId: number; te
 export async function completePracticeSessionAction(payload: { sessionId: number; reason: string }) {
   try {
     const result = await completeLearningSession(payload);
-    revalidatePath("/today");
     revalidatePath("/learn");
     revalidatePath("/practice");
     return result;

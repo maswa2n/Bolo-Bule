@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bolo Bule — Linear-inspired Landing Concept (v3)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #061126;
+        --border: rgba(255, 255, 255, 0.08);
+        --border-strong: rgba(255, 255, 255, 0.14);
+        --text: #f4f5f8;
+        --text-muted: #a8b0bd;
+        --text-subtle: #6b7380;
+        --accent: #0d62ff;
+        --accent-hover: #1a6fff;
+        --accent-muted: rgba(13, 98, 255, 0.14);
+        --cyan: #22d3ee;
+        --brand-deep: rgba(6, 27, 68, 0.72);
+        --brand-mid: rgba(8, 36, 88, 0.48);
+        --brand-light: rgba(12, 55, 120, 0.28);
+        --brand-faint: rgba(255, 255, 255, 0.04);
+        --radius-sm: 6px;
+        --radius-md: 10px;
+        --radius-lg: 14px;
+        --ease: cubic-bezier(0.22, 1, 0.36, 1);
+        --duration: 160ms;
+        --font: "Inter", system-ui, -apple-system, sans-serif;
+        --max-width: 1200px;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        font-family: var(--font);
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+        min-height: 100vh;
+      }
+
+      .page-bg {
+        position: fixed;
+        inset: 0;
+        z-index: -2;
+        background:
+          radial-gradient(circle at 15% 10%, rgba(255, 101, 40, 0.2), transparent 30%),
+          radial-gradient(circle at 85% 20%, rgba(0, 195, 255, 0.18), transparent 32%),
+          radial-gradient(circle at 50% 88%, rgba(5, 97, 255, 0.16), transparent 36%),
+          linear-gradient(130deg, #061126 0%, #0a2f6e 45%, #055a78 100%);
+      }
+
+      .page-bg::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image: radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+        background-size: 24px 24px;
+        mask-image: linear-gradient(to bottom, black 0%, transparent 75%);
+      }
+
+      .page-watermark {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        opacity: 0.2;
+        background-image: url("../../public/branding/bolo-bule-logo.png");
+        background-repeat: no-repeat;
+        background-position: center 44%;
+        background-size: min(58vw, 620px);
+        filter: grayscale(10%) blur(0.35px);
+        mask-image: radial-gradient(ellipse 70% 62% at 50% 44%, black 25%, transparent 72%);
+      }
+
+      .page-content {
+        position: relative;
+        z-index: 1;
+      }
+
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        background: linear-gradient(
+          180deg,
+          rgba(6, 17, 38, 0.78) 0%,
+          rgba(6, 17, 38, 0.52) 100%
+        );
+        backdrop-filter: blur(14px);
+      }
+
+      .nav-inner {
+        max-width: var(--max-width);
+        margin: 0 auto;
+        padding: 0 24px;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+      }
+
+      .nav-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        color: var(--text);
+      }
+
+      .nav-brand img {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+      }
+
+      .nav-brand span {
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+
+      .nav-links {
+        display: none;
+        gap: 4px;
+      }
+
+      @media (min-width: 768px) {
+        .nav-links {
+          display: flex;
+        }
+      }
+
+      .nav-link {
+        padding: 6px 12px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-muted);
+        text-decoration: none;
+        border-radius: var(--radius-sm);
+        transition: color var(--duration) var(--ease), background var(--duration) var(--ease);
+      }
+
+      .nav-link:hover {
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1;
+        border-radius: var(--radius-sm);
+        border: 1px solid transparent;
+        cursor: pointer;
+        text-decoration: none;
+        transition:
+          background var(--duration) var(--ease),
+          border-color var(--duration) var(--ease),
+          color var(--duration) var(--ease),
+          transform var(--duration) var(--ease);
+      }
+
+      .btn:active {
+        transform: scale(0.98);
+      }
+
+      .btn-secondary {
+        padding: 9px 16px;
+        color: var(--text);
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.1) 0%,
+          rgba(255, 255, 255, 0.04) 100%
+        );
+        border-color: rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(4px);
+      }
+
+      .btn-secondary:hover {
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.14) 0%,
+          rgba(255, 255, 255, 0.07) 100%
+        );
+        border-color: var(--border-strong);
+      }
+
+      .btn-primary {
+        padding: 10px 16px;
+        color: #fff;
+        background: var(--accent);
+        border-color: transparent;
+        font-weight: 600;
+      }
+
+      .btn-primary:hover {
+        background: var(--accent-hover);
+      }
+
+      .btn-full {
+        width: 100%;
+      }
+
+      .hero {
+        max-width: var(--max-width);
+        margin: 0 auto;
+        padding: 48px 24px 80px;
+        display: grid;
+        gap: 48px;
+        align-items: start;
+      }
+
+      @media (min-width: 1024px) {
+        .hero {
+          grid-template-columns: 1.15fr 0.85fr;
+          gap: 64px;
+          padding-top: 64px;
+          min-height: calc(100vh - 56px);
+          align-items: center;
+        }
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text-muted);
+        letter-spacing: 0.02em;
+        margin-bottom: 20px;
+      }
+
+      .eyebrow-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--cyan);
+        box-shadow: 0 0 8px rgba(34, 211, 238, 0.5);
+      }
+
+      .hero-title {
+        font-size: clamp(32px, 5vw, 48px);
+        font-weight: 600;
+        letter-spacing: -0.03em;
+        line-height: 1.08;
+        max-width: 18ch;
+      }
+
+      .hero-desc {
+        margin-top: 16px;
+        font-size: 16px;
+        line-height: 1.6;
+        color: var(--text-muted);
+        max-width: 46ch;
+      }
+
+      .steps {
+        margin-top: 40px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 4px;
+        border-radius: var(--radius-lg);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        background: linear-gradient(
+          180deg,
+          rgba(6, 27, 68, 0.38) 0%,
+          rgba(6, 27, 68, 0.14) 42%,
+          rgba(6, 27, 68, 0.22) 100%
+        );
+        backdrop-filter: blur(6px);
+      }
+
+      .step {
+        display: grid;
+        grid-template-columns: 32px 1fr;
+        gap: 16px;
+        padding: 16px 14px;
+        border-radius: calc(var(--radius-lg) - 4px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .step:nth-child(1) {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.1) 0%,
+          rgba(255, 255, 255, 0.03) 55%,
+          rgba(6, 27, 68, 0.12) 100%
+        );
+      }
+
+      .step:nth-child(2) {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.04) 0%,
+          rgba(255, 255, 255, 0.01) 50%,
+          rgba(255, 255, 255, 0.05) 100%
+        );
+        border-color: rgba(255, 255, 255, 0.04);
+      }
+
+      .step:nth-child(3) {
+        background: linear-gradient(
+          135deg,
+          rgba(6, 27, 68, 0.14) 0%,
+          rgba(255, 255, 255, 0.03) 50%,
+          rgba(255, 255, 255, 0.09) 100%
+        );
+      }
+
+      .step-num {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-subtle);
+        font-variant-numeric: tabular-nums;
+        padding-top: 2px;
+      }
+
+      .step-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+        letter-spacing: -0.01em;
+      }
+
+      .step-desc {
+        margin-top: 4px;
+        font-size: 13px;
+        color: var(--text-muted);
+        line-height: 1.55;
+      }
+
+      .proof {
+        margin-top: 40px;
+        padding: 18px;
+        border-radius: var(--radius-lg);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        background: linear-gradient(
+          160deg,
+          rgba(6, 27, 68, 0.34) 0%,
+          rgba(6, 27, 68, 0.1) 38%,
+          rgba(6, 27, 68, 0.08) 62%,
+          rgba(6, 27, 68, 0.3) 100%
+        );
+        backdrop-filter: blur(5px);
+      }
+
+      .proof-label {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-subtle);
+        margin-bottom: 12px;
+      }
+
+      .proof-roles {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 20px;
+      }
+
+      .proof-role {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text-muted);
+        padding: 4px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.08) 0%,
+          rgba(255, 255, 255, 0.02) 100%
+        );
+      }
+
+      .proof-quotes {
+        display: grid;
+        gap: 12px;
+      }
+
+      @media (min-width: 640px) {
+        .proof-quotes {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+
+      .proof-quote {
+        padding: 16px;
+        border-radius: var(--radius-md);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        backdrop-filter: blur(4px);
+      }
+
+      .proof-quote:nth-child(1) {
+        background: linear-gradient(
+          145deg,
+          rgba(255, 255, 255, 0.11) 0%,
+          rgba(255, 255, 255, 0.04) 45%,
+          rgba(6, 27, 68, 0.1) 100%
+        );
+      }
+
+      .proof-quote:nth-child(2) {
+        background: linear-gradient(
+          145deg,
+          rgba(255, 255, 255, 0.03) 0%,
+          rgba(255, 255, 255, 0.01) 50%,
+          rgba(255, 255, 255, 0.04) 100%
+        );
+        border-color: rgba(255, 255, 255, 0.05);
+      }
+
+      .proof-quote:nth-child(3) {
+        background: linear-gradient(
+          145deg,
+          rgba(6, 27, 68, 0.12) 0%,
+          rgba(255, 255, 255, 0.04) 45%,
+          rgba(255, 255, 255, 0.1) 100%
+        );
+      }
+
+      .proof-quote p {
+        font-size: 13px;
+        color: var(--text-muted);
+        line-height: 1.55;
+      }
+
+      .proof-quote cite {
+        display: block;
+        margin-top: 10px;
+        font-size: 11px;
+        font-weight: 600;
+        font-style: normal;
+        color: var(--text-subtle);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .hero-actions {
+        margin-top: 32px;
+      }
+
+      .panel {
+        border-radius: var(--radius-lg);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+        background: linear-gradient(
+          165deg,
+          rgba(6, 27, 68, 0.68) 0%,
+          rgba(8, 36, 88, 0.42) 38%,
+          rgba(10, 48, 105, 0.32) 68%,
+          rgba(6, 27, 68, 0.5) 100%
+        );
+        backdrop-filter: blur(12px);
+        box-shadow:
+          0 16px 40px rgba(2, 10, 28, 0.35),
+          inset 0 1px 0 rgba(255, 255, 255, 0.07);
+      }
+
+      .auth-tabs {
+        display: flex;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        background: linear-gradient(
+          180deg,
+          rgba(6, 27, 68, 0.55) 0%,
+          rgba(6, 27, 68, 0.28) 100%
+        );
+      }
+
+      .auth-tab {
+        flex: 1;
+        padding: 14px 16px;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-muted);
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -1px;
+        transition: color var(--duration) var(--ease), border-color var(--duration) var(--ease);
+      }
+
+      .auth-tab.active {
+        color: var(--text);
+        border-bottom-color: var(--accent);
+      }
+
+      .auth-tab:not(.active):hover {
+        color: var(--text);
+      }
+
+      .auth-form {
+        padding: 24px;
+        background: linear-gradient(
+          180deg,
+          rgba(6, 27, 68, 0.22) 0%,
+          rgba(6, 27, 68, 0.08) 55%,
+          rgba(6, 27, 68, 0.18) 100%
+        );
+      }
+
+      .auth-form h3 {
+        font-size: 16px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+
+      .auth-form .subtitle {
+        margin-top: 6px;
+        font-size: 13px;
+        color: var(--text-muted);
+      }
+
+      .form-group {
+        margin-top: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text-muted);
+        margin-bottom: 6px;
+      }
+
+      .form-input-wrap {
+        position: relative;
+      }
+
+      .form-input {
+        width: 100%;
+        padding: 10px 12px;
+        font-family: inherit;
+        font-size: 14px;
+        color: var(--text);
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.07) 0%,
+          rgba(255, 255, 255, 0.03) 100%
+        );
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: var(--radius-sm);
+        outline: none;
+        transition: border-color var(--duration) var(--ease), box-shadow var(--duration) var(--ease);
+      }
+
+      .form-input:focus {
+        border-color: rgba(13, 98, 255, 0.5);
+        box-shadow: 0 0 0 3px rgba(13, 98, 255, 0.12);
+      }
+
+      .form-input::placeholder {
+        color: var(--text-subtle);
+      }
+
+      .toggle-password {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text-muted);
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 4px;
+      }
+
+      .toggle-password:hover {
+        color: var(--text);
+      }
+
+      .form-actions {
+        margin-top: 24px;
+      }
+
+      .form-switch {
+        margin-top: 14px;
+        text-align: center;
+        font-size: 13px;
+        color: var(--text-muted);
+      }
+
+      .link-btn {
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: 500;
+        color: var(--text);
+        background: none;
+        border: none;
+        cursor: pointer;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        padding: 0;
+      }
+
+      .link-btn:hover {
+        color: #fff;
+      }
+
+      .form-footer {
+        margin-top: 16px;
+        font-size: 11px;
+        color: var(--text-subtle);
+        line-height: 1.5;
+        text-align: center;
+      }
+
+      .concept-banner {
+        max-width: var(--max-width);
+        margin: 0 auto;
+        padding: 12px 24px;
+      }
+
+      .concept-banner-inner {
+        padding: 10px 14px;
+        border-radius: var(--radius-md);
+        border: 1px dashed rgba(34, 211, 238, 0.28);
+        background: linear-gradient(
+          90deg,
+          rgba(34, 211, 238, 0.1) 0%,
+          rgba(34, 211, 238, 0.03) 50%,
+          rgba(34, 211, 238, 0.08) 100%
+        );
+        backdrop-filter: blur(4px);
+        font-size: 12px;
+        color: #67e8f9;
+        line-height: 1.5;
+      }
+
+      .hero-copy-zone {
+        padding: 4px 0 8px;
+      }
+
+      @media (max-width: 640px) {
+        .page-watermark {
+          opacity: 0.16;
+          background-size: min(82vw, 460px);
+          background-position: center 38%;
+        }
+      }
+
+      .concept-banner-inner strong {
+        color: #a5f3fc;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-bg" aria-hidden="true"></div>
+    <div class="page-watermark" aria-hidden="true"></div>
+
+    <div class="page-content">
+    <div class="concept-banner">
+      <div class="concept-banner-inner">
+        <strong>Preview v3</strong> — Gradasi transparansi per box + watermark logo Bolo Bule di tengah.
+        Tengah tiap panel lebih tipis agar logo terlihat; tepi sedikit lebih tebal untuk kontras teks.
+      </div>
+    </div>
+
+    <header class="nav">
+      <div class="nav-inner">
+        <a class="nav-brand" href="#">
+          <img src="../../public/branding/bolo-bule-logo.png" alt="Bolo Bule" />
+          <span>Bolo Bule</span>
+        </a>
+        <nav class="nav-links" aria-label="Navigasi utama">
+          <a class="nav-link" href="#workflow">Alur kerja</a>
+          <a class="nav-link" href="#proof">Testimoni</a>
+          <a class="nav-link" href="#auth">Akses</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="hero">
+      <section aria-labelledby="hero-title">
+        <div class="hero-copy-zone">
+        <div class="eyebrow">
+          <span class="eyebrow-dot" aria-hidden="true"></span>
+          Real-world cases · Speaking + writing feedback
+        </div>
+
+        <h1
+          id="hero-title"
+          class="hero-title"
+          data-signin-text="Kembali lanjutkan latihan bahasa asing dari progres terbaik Anda."
+          data-signup-text="Bangun kultur belajar bahasa asing yang konsisten untuk tim Anda."
+        >
+          Bangun kultur belajar bahasa asing yang konsisten untuk tim Anda.
+        </h1>
+
+        <p
+          class="hero-desc"
+          data-signin-text="Masuk kembali ke Bolo Bule untuk melanjutkan turn latihan, membaca feedback terbaru, dan menjaga momentum peningkatan bahasa Anda setiap hari."
+          data-signup-text="Mulai dari satu akun admin, susun skenario latihan kerja nyata, lalu bantu tim berkembang lewat feedback speaking dan writing yang terstruktur."
+        >
+          Mulai dari satu akun admin, susun skenario latihan kerja nyata, lalu bantu tim berkembang lewat feedback
+          speaking dan writing yang terstruktur.
+        </p>
+        </div>
+
+        <div class="steps" id="workflow">
+          <article class="step" data-signup-only>
+            <span class="step-num">01</span>
+            <div>
+              <p class="step-title">Setup team flow</p>
+              <p class="step-desc">Buat akun pertama, siapkan case belajar, lalu tetapkan ritme latihan tim.</p>
+            </div>
+          </article>
+          <article class="step" data-signup-only>
+            <span class="step-num">02</span>
+            <div>
+              <p class="step-title">Activate practice</p>
+              <p class="step-desc">Tim berlatih speaking dan writing dengan coach response yang adaptif.</p>
+            </div>
+          </article>
+          <article class="step" data-signup-only>
+            <span class="step-num">03</span>
+            <div>
+              <p class="step-title">Measure impact</p>
+              <p class="step-desc">Pantau progres objective dan rekomendasi next drill tiap member.</p>
+            </div>
+          </article>
+
+          <article class="step" data-signin-only hidden>
+            <span class="step-num">01</span>
+            <div>
+              <p class="step-title">Resume session</p>
+              <p class="step-desc">Lanjutkan dari case dan target yang terakhir Anda kerjakan.</p>
+            </div>
+          </article>
+          <article class="step" data-signin-only hidden>
+            <span class="step-num">02</span>
+            <div>
+              <p class="step-title">Practice deep</p>
+              <p class="step-desc">Latihan speaking dan writing dengan respons coach adaptif di setiap turn.</p>
+            </div>
+          </article>
+          <article class="step" data-signin-only hidden>
+            <span class="step-num">03</span>
+            <div>
+              <p class="step-title">Improve fast</p>
+              <p class="step-desc">Lihat progres objective, skor, dan rekomendasi latihan lanjutan yang personal.</p>
+            </div>
+          </article>
+        </div>
+
+        <div class="proof" id="proof">
+          <p class="proof-label">Digunakan oleh tim di</p>
+          <div class="proof-roles">
+            <span class="proof-role">Sales Team</span>
+            <span class="proof-role">Customer Support</span>
+            <span class="proof-role">HR Interview Prep</span>
+            <span class="proof-role">Operations</span>
+            <span class="proof-role">Business Development</span>
+          </div>
+          <div class="proof-quotes">
+            <blockquote class="proof-quote">
+              <p>
+                &ldquo;Tim kami akhirnya punya pola latihan speaking yang konsisten dan mudah dievaluasi setiap
+                minggu.&rdquo;
+              </p>
+              <cite>Rina — Learning Lead</cite>
+            </blockquote>
+            <blockquote class="proof-quote">
+              <p>
+                &ldquo;Feedback writing-nya jelas, jadi anggota tim tahu apa yang harus diperbaiki di sesi berikutnya.&rdquo;
+              </p>
+              <cite>Dimas — Team Supervisor</cite>
+            </blockquote>
+            <blockquote class="proof-quote">
+              <p>
+                &ldquo;Case-based flow membuat belajar bahasa asing terasa relevan dengan tantangan kerja harian.&rdquo;
+              </p>
+              <cite>Tari — Program Manager</cite>
+            </blockquote>
+          </div>
+        </div>
+
+        <div class="hero-actions">
+          <a class="btn btn-secondary" href="/today">Eksplor demo workspace</a>
+        </div>
+      </section>
+
+      <aside id="auth">
+        <div class="panel" id="auth-form">
+          <div class="auth-tabs" role="tablist" aria-label="Masuk atau buat akun">
+            <button class="auth-tab" role="tab" aria-selected="false" data-auth="signin">Masuk</button>
+            <button class="auth-tab active" role="tab" aria-selected="true" data-auth="signup">Buat akun</button>
+          </div>
+          <form
+            class="auth-form"
+            onsubmit="event.preventDefault(); alert('Preview only — form tidak terhubung ke Supabase.');"
+          >
+            <h3
+              data-signin-text="Masuk ke workspace Anda"
+              data-signup-text="Buat akun pertama Anda"
+            >
+              Buat akun pertama Anda
+            </h3>
+            <p
+              class="subtitle"
+              data-signin-text="Lanjutkan dari progres terakhir."
+              data-signup-text="Setup ~90 detik — langsung ke workspace latihan."
+            >
+              Setup ~90 detik — langsung ke workspace latihan.
+            </p>
+
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input
+                class="form-input"
+                id="email"
+                type="email"
+                placeholder="nama@perusahaan.com"
+                autocomplete="email"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="password">Password</label>
+              <div class="form-input-wrap">
+                <input
+                  class="form-input"
+                  id="password"
+                  type="password"
+                  placeholder="Minimal 8 karakter"
+                  autocomplete="new-password"
+                  required
+                  style="padding-right: 56px"
+                />
+                <button type="button" class="toggle-password" aria-label="Tampilkan password">Show</button>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary btn-full" id="submit-cta">Buat akun</button>
+            </div>
+
+            <p class="form-switch">
+              <span id="switch-prefix">Sudah punya akun?</span>
+              <button type="button" class="link-btn" id="switch-cta">Masuk</button>
+            </p>
+
+            <p class="form-footer" id="form-footer">
+              Dengan mendaftar, Anda setuju kebijakan privasi Bolo Bule. Data latihan disimpan aman di Supabase.
+            </p>
+          </form>
+        </div>
+      </aside>
+    </main>
+    </div>
+
+    <script>
+      (function () {
+        let mode = "signup";
+
+        const authTabs = document.querySelectorAll(".auth-tab[data-auth]");
+        const heroTitle = document.querySelector(".hero-title");
+        const heroDesc = document.querySelector(".hero-desc");
+        const formTitle = document.querySelector(".auth-form h3");
+        const formSubtitle = document.querySelector(".auth-form .subtitle");
+        const submitCta = document.getElementById("submit-cta");
+        const switchCta = document.getElementById("switch-cta");
+        const switchPrefix = document.getElementById("switch-prefix");
+        const formFooter = document.getElementById("form-footer");
+        const signupSteps = document.querySelectorAll("[data-signup-only]");
+        const signinSteps = document.querySelectorAll("[data-signin-only]");
+        const passwordInput = document.getElementById("password");
+        const togglePassword = document.querySelector(".toggle-password");
+
+        const copy = {
+          signup: {
+            submit: "Buat akun",
+            switchPrefix: "Sudah punya akun?",
+            switchAction: "Masuk",
+            passwordPlaceholder: "Minimal 8 karakter",
+            footer:
+              "Dengan mendaftar, Anda setuju kebijakan privasi Bolo Bule. Data latihan disimpan aman di Supabase.",
+          },
+          signin: {
+            submit: "Masuk",
+            switchPrefix: "Belum punya akun?",
+            switchAction: "Buat akun",
+            passwordPlaceholder: "Password Anda",
+            footer: "Gunakan email dan password yang sama dengan akun tim Anda.",
+          },
+        };
+
+        function setText(el, m) {
+          if (!el) return;
+          const attr = m === "signup" ? "data-signup-text" : "data-signin-text";
+          const val = el.getAttribute(attr);
+          if (val) el.textContent = val;
+        }
+
+        function applyMode(next) {
+          mode = next;
+
+          authTabs.forEach((tab) => {
+            const active = tab.dataset.auth === mode;
+            tab.classList.toggle("active", active);
+            tab.setAttribute("aria-selected", active ? "true" : "false");
+          });
+
+          setText(heroTitle, mode);
+          setText(heroDesc, mode);
+          setText(formTitle, mode);
+          setText(formSubtitle, mode);
+
+          submitCta.textContent = copy[mode].submit;
+          switchPrefix.textContent = copy[mode].switchPrefix + " ";
+          switchCta.textContent = copy[mode].switchAction;
+          formFooter.textContent = copy[mode].footer;
+          passwordInput.placeholder = copy[mode].passwordPlaceholder;
+          passwordInput.autocomplete = mode === "signup" ? "new-password" : "current-password";
+
+          signupSteps.forEach((el) => {
+            el.hidden = mode !== "signup";
+          });
+          signinSteps.forEach((el) => {
+            el.hidden = mode !== "signin";
+          });
+        }
+
+        authTabs.forEach((tab) => {
+          tab.addEventListener("click", () => applyMode(tab.dataset.auth));
+        });
+
+        switchCta.addEventListener("click", () => {
+          applyMode(mode === "signup" ? "signin" : "signup");
+        });
+
+        togglePassword.addEventListener("click", () => {
+          const show = passwordInput.type === "password";
+          passwordInput.type = show ? "text" : "password";
+          togglePassword.textContent = show ? "Hide" : "Show";
+        });
+
+        applyMode("signup");
+      })();
+    </script>
+  </body>
+</html>

@@ -1,12 +1,12 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { ensureProfileAction } from "@/lib/auth/ensure-profile";
+import type { AuthMode } from "@/components/marketing/landing-data";
 
 type FeedbackTone = "success" | "error" | "info";
-type AuthMode = "signin" | "signup";
 type CtaVariant = "a" | "b";
 
 type LoginFormProps = {
@@ -15,7 +15,7 @@ type LoginFormProps = {
 };
 
 function resolveMode(value: string | null): AuthMode {
-  return value === "signup" ? "signup" : "signin";
+  return value === "signin" ? "signin" : "signup";
 }
 
 function resolveVariant(value: string | null): CtaVariant | null {
@@ -25,6 +25,28 @@ function resolveVariant(value: string | null): CtaVariant | null {
 
   return null;
 }
+
+const formCopy = {
+  signup: {
+    title: "Buat akun pertama Anda",
+    subtitle: "Setup ~90 detik — langsung ke workspace latihan.",
+    submit: "Buat akun",
+    switchPrefix: "Sudah punya akun?",
+    switchAction: "Masuk",
+    passwordPlaceholder: "Minimal 8 karakter",
+    footer:
+      "Dengan mendaftar, Anda setuju kebijakan privasi Bolo Bule. Data latihan disimpan aman di Supabase.",
+  },
+  signin: {
+    title: "Masuk ke workspace Anda",
+    subtitle: "Lanjutkan dari progres terakhir.",
+    submit: "Masuk",
+    switchPrefix: "Belum punya akun?",
+    switchAction: "Buat akun",
+    passwordPlaceholder: "Password Anda",
+    footer: "Gunakan email dan password yang sama dengan akun tim Anda.",
+  },
+} as const;
 
 export function LoginForm({ initialMode, initialVariant }: LoginFormProps) {
   const router = useRouter();
@@ -82,22 +104,6 @@ export function LoginForm({ initialMode, initialVariant }: LoginFormProps) {
     syncSearchState(nextMode, variant);
   }
 
-  const ctaCopy = useMemo(() => {
-    if (mode === "signup") {
-      return variant === "b" ? "Aktifkan akun pertama tim" : "Buat akun & mulai latihan";
-    }
-
-    return variant === "b" ? "Masuk & lanjut dari progres terakhir" : "Lanjutkan belajar";
-  }, [mode, variant]);
-
-  const stickyCtaCopy = useMemo(() => {
-    if (mode === "signup") {
-      return variant === "b" ? "Aktifkan akun tim" : "Buat akun sekarang";
-    }
-
-    return variant === "b" ? "Masuk & lanjutkan progres" : "Lanjutkan latihan";
-  }, [mode, variant]);
-
   function submit() {
     setFeedback(null);
     startTransition(async () => {
@@ -112,7 +118,7 @@ export function LoginForm({ initialMode, initialVariant }: LoginFormProps) {
           }
           setFeedback({
             tone: "success",
-            message: "Akun dibuat. Jika email confirmation aktif, cek inbox. Lalu sign in.",
+            message: "Akun dibuat. Jika email confirmation aktif, cek inbox. Lalu masuk.",
           });
           setMode("signin");
           syncSearchState("signin", variant);
@@ -142,165 +148,117 @@ export function LoginForm({ initialMode, initialVariant }: LoginFormProps) {
     });
   }
 
+  const copy = formCopy[mode];
+
   return (
-    <div
-      id="auth-form"
-      className="bb-glass-panel bb-motion-rise bb-motion-delay-1 bb-surface-shimmer mx-auto w-full max-w-lg rounded-3xl p-5 shadow-xl sm:p-6"
-    >
-      <div className="mb-4 grid grid-cols-2 gap-2 rounded-2xl border border-cyan-100/80 bg-white/55 p-1">
+    <div id="auth-form" className="bb-landing-panel">
+      <div className="bb-landing-auth-tabs" role="tablist" aria-label="Masuk atau buat akun">
         <button
           type="button"
+          role="tab"
+          aria-selected={mode === "signin"}
+          className={["bb-landing-auth-tab", mode === "signin" ? "is-active" : ""].join(" ")}
           onClick={() => setModeAndSync("signin")}
-          className={[
-            "bb-tap-target rounded-xl px-3 py-2 text-sm font-semibold transition",
-            mode === "signin" ? "bb-btn-primary" : "text-slate-600 hover:text-cyan-700",
-          ].join(" ")}
         >
           Masuk
         </button>
         <button
           type="button"
+          role="tab"
+          aria-selected={mode === "signup"}
+          className={["bb-landing-auth-tab", mode === "signup" ? "is-active" : ""].join(" ")}
           onClick={() => setModeAndSync("signup")}
-          className={[
-            "bb-tap-target rounded-xl px-3 py-2 text-sm font-semibold transition",
-            mode === "signup" ? "bb-btn-primary" : "text-slate-600 hover:text-cyan-700",
-          ].join(" ")}
         >
           Buat akun
         </button>
       </div>
 
-      <div className="mb-3 flex flex-wrap gap-2">
-        <span className="bb-chip px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-cyan-900">
-          Learning access
-        </span>
-        <span className="bb-chip px-3 py-1 text-[11px] font-semibold text-cyan-900">Adaptive journey</span>
-        <span className="bb-chip px-3 py-1 text-[11px] font-semibold text-cyan-900">CTA Variant {variant.toUpperCase()}</span>
-      </div>
-      <p className="text-xs font-semibold uppercase tracking-[0.15em] text-cyan-700">Mulai perjalanan belajar</p>
-      <h1 className="mt-2 text-2xl font-semibold text-slate-900">
-        {mode === "signin" ? "Masuk ke Bolo Bule" : "Buat akun pertama Anda"}
-      </h1>
-      <p className="mt-2 text-sm text-slate-600">
-        {mode === "signin"
-          ? "Lanjutkan latihan speaking dan writing dari progres terakhir Anda."
-          : "Akun pertama otomatis mendapat role admin untuk menyiapkan case belajar tim."}
-      </p>
+      <form
+        className="bb-landing-auth-form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          submit();
+        }}
+      >
+        <h2 className="bb-landing-form-title">{copy.title}</h2>
+        <p className="bb-landing-form-subtitle">{copy.subtitle}</p>
 
-      <div className="mt-4 rounded-2xl border border-cyan-100 bg-cyan-50/55 p-3 text-xs text-cyan-900">
-        <p className="font-semibold">Yang akan Anda dapatkan setelah login:</p>
-        <ul className="mt-2 space-y-1 text-cyan-800">
-          <li>- Case-based practice yang relevan dengan situasi kerja nyata.</li>
-          <li>- Feedback instan untuk grammar, clarity, dan confidence.</li>
-          <li>- Rekomendasi latihan lanjutan berdasarkan performa Anda.</li>
-        </ul>
-      </div>
-
-      <div className="mt-4 rounded-2xl border border-blue-100 bg-blue-50/70 p-3 text-xs text-blue-900">
-        <p className="font-semibold">Rencana cepat setelah login:</p>
-        <div className="mt-2 grid gap-2 sm:grid-cols-3">
-          <p className="rounded-xl border border-blue-100 bg-white/80 px-2 py-1">1) Pilih case yang relevan</p>
-          <p className="rounded-xl border border-blue-100 bg-white/80 px-2 py-1">2) Jalankan 3-5 turn latihan</p>
-          <p className="rounded-xl border border-blue-100 bg-white/80 px-2 py-1">3) Cek feedback & next drill</p>
-        </div>
-      </div>
-
-      <div className="mt-4 space-y-3">
-        <label className="block text-sm">
-          <span className="mb-1 block text-slate-600">Email</span>
+        <div className="bb-landing-field">
+          <label htmlFor="email">Email</label>
           <input
+            id="email"
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="bb-tap-target w-full rounded-xl border border-slate-200 bg-white/90 px-3 py-2 outline-none ring-cyan-400 focus:ring-2"
+            className="bb-landing-input"
+            placeholder="nama@perusahaan.com"
             autoComplete="email"
+            required
           />
-        </label>
-        <label className="block text-sm">
-          <span className="mb-1 block text-slate-600">Password</span>
-          <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white/90 px-3 py-2 ring-cyan-400 focus-within:ring-2">
+        </div>
+
+        <div className="bb-landing-field">
+          <label htmlFor="password">Password</label>
+          <div className="bb-landing-input-wrap">
             <input
+              id="password"
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              className="bb-tap-target w-full bg-transparent outline-none"
+              className="bb-landing-input bb-landing-input-password"
+              placeholder={copy.passwordPlaceholder}
               autoComplete={mode === "signup" ? "new-password" : "current-password"}
+              required
             />
             <button
               type="button"
+              className="bb-landing-toggle-password"
               onClick={() => setShowPassword((current) => !current)}
-              className="bb-tap-target text-xs font-semibold text-cyan-700 hover:text-cyan-900"
+              aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
             >
               {showPassword ? "Hide" : "Show"}
             </button>
           </div>
-        </label>
-      </div>
+        </div>
 
-      {feedback ? (
-        <p
-          className={[
-            "bb-state-enter mt-3 rounded-xl px-3 py-2 text-sm",
-            feedback.tone === "success"
-              ? "bb-celebrate-subtle bb-state-success"
-              : feedback.tone === "info"
-                ? "bb-state-info"
-                : "bb-state-error",
-          ].join(" ")}
-        >
-          {feedback.message}
-        </p>
-      ) : null}
-
-      <div className="mt-4 grid gap-2 sm:flex sm:flex-wrap sm:items-center">
-        <button
-          type="button"
-          onClick={submit}
-          disabled={isPending || !email || !password}
-          className={[
-            "bb-btn-primary bb-btn-sheen bb-press-depth bb-tap-target w-full px-4 py-2 text-sm font-semibold disabled:opacity-60 sm:w-auto",
-            isPending ? "bb-motion-pulse" : "",
-          ].join(" ")}
-        >
-          {isPending ? "Menyiapkan sesi..." : ctaCopy}
-        </button>
-        <button
-          type="button"
-          onClick={() => setModeAndSync(mode === "signin" ? "signup" : "signin")}
-          className="bb-btn-secondary bb-press-depth bb-tap-target w-full px-4 py-2 text-sm font-semibold sm:w-auto"
-        >
-          {mode === "signin" ? "Belum punya akun?" : "Sudah punya akun?"}
-        </button>
-      </div>
-
-      <p className="mt-3 text-xs text-slate-500">
-        Dengan melanjutkan, Anda menyetujui proses pembelajaran adaptif Bolo Bule untuk peningkatan
-        kemampuan bahasa asing secara bertahap dan terukur.
-      </p>
-
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-cyan-100/70 bg-white/92 p-3 shadow-[0_-12px_24px_rgba(15,36,72,0.14)] backdrop-blur-sm sm:hidden">
-        <div className="mx-auto flex w-full max-w-lg items-center gap-2">
-          <button
-            type="button"
-            onClick={submit}
-            disabled={isPending || !email || !password}
+        {feedback ? (
+          <p
             className={[
-              "bb-btn-primary bb-btn-sheen bb-press-depth bb-tap-target w-full px-4 py-2 text-sm font-semibold disabled:opacity-60",
-              isPending ? "bb-motion-pulse" : "",
+              "bb-landing-feedback",
+              feedback.tone === "success"
+                ? "bb-state-success"
+                : feedback.tone === "info"
+                  ? "bb-state-info"
+                  : "bb-state-error",
             ].join(" ")}
           >
-            {isPending ? "Menyiapkan sesi..." : stickyCtaCopy}
-          </button>
+            {feedback.message}
+          </p>
+        ) : null}
+
+        <div className="bb-landing-form-actions">
           <button
-            type="button"
-            onClick={() => setModeAndSync(mode === "signin" ? "signup" : "signin")}
-            className="bb-btn-secondary bb-press-depth bb-tap-target shrink-0 px-3 py-2 text-xs font-semibold"
+            type="submit"
+            disabled={isPending || !email || !password}
+            className="bb-landing-btn-primary bb-landing-btn-full"
           >
-            {mode === "signin" ? "Sign up" : "Sign in"}
+            {isPending ? "Menyiapkan sesi..." : copy.submit}
           </button>
         </div>
-      </div>
-      <div className="h-20 sm:hidden" aria-hidden />
+
+        <p className="bb-landing-form-switch">
+          <span>{copy.switchPrefix} </span>
+          <button
+            type="button"
+            className="bb-landing-link-btn"
+            onClick={() => setModeAndSync(mode === "signin" ? "signup" : "signin")}
+          >
+            {copy.switchAction}
+          </button>
+        </p>
+
+        <p className="bb-landing-form-footer">{copy.footer}</p>
+      </form>
     </div>
   );
 }
