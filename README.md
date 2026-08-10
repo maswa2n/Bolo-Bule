@@ -71,5 +71,22 @@ Konfigurasi agent diadaptasi dari project CMMS-Bus:
 
 ## Cursor MCP
 
-File `.cursor/mcp.json` mengarahkan Supabase MCP ke project **iuzvtttsjnlwtoegrsve**.
-Setelah membuka workspace ini, authenticate MCP Supabase jika diminta (Settings → MCP).
+Server MCP khusus workspace: **`supabase-bolo-bule`** → project **iuzvtttsjnlwtoegrsve**.
+
+### Pindah dari CMMS-Bus (atau project lain)
+
+```powershell
+# 1. File -> Open Folder -> D:\Bolo Bule
+# 2. Ctrl+Shift+P -> Developer: Reload Window
+cd "D:\Bolo Bule"
+.\scripts\mcp-project-status.ps1
+```
+
+Verifikasi di chat: agent harus memakai MCP **`supabase-bolo-bule`** (bukan `user-supabase`) dan `get_project_url` → `iuzvtttsjnlwtoegrsve.supabase.co`.
+
+| File | Fungsi |
+|------|--------|
+| `.cursor/mcp.json` | MCP server `supabase-bolo-bule` |
+| `.cursor/mcp-project.meta.json` | Project ref + petunjuk switch |
+| `.cursor/rules/44-mcp-supabase-scope.mdc` | Agent wajib pakai server project |
+| `scripts/mcp-project-status.ps1` | Cek MCP sebelum kerja DB/RPC |

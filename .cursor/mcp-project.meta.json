@@ -1,0 +1,17 @@
+{
+  "workspaceLabel": "Bolo Bule",
+  "mcpServerKey": "supabase-bolo-bule",
+  "projectRef": "iuzvtttsjnlwtoegrsve",
+  "apiUrl": "https://iuzvtttsjnlwtoegrsve.supabase.co",
+  "dashboardUrl": "https://supabase.com/dashboard/project/iuzvtttsjnlwtoegrsve",
+  "readOnlyDefault": false,
+  "otherWorkspaces": [
+    {
+      "label": "CMMS-Bus",
+      "folder": "D:\\CMMS-Bus",
+      "mcpServerKey": "supabase-cmms",
+      "projectRefProd": "liqhxftzgaszmoqnoiha",
+      "projectRefDev": "iwtlopofohkfjcitrloc"
+    }
+  ]
+}

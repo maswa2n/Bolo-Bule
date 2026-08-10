@@ -1,5 +1,96 @@
 [
   {
+    "date": "2026-08-10",
+    "title": "Practice layout.css 404 + translateSupportOptionAction POST 500",
+    "symptom": "Console layout.css 404 and POST /practice 500 when clicking answer option",
+    "root_cause": "Stale Next.js dev/HMR: CSS chunk 404 + server action ID mismatch; heavy actions.ts bundle; phrase cache RLS authenticated-only",
+    "fix": "Split phrase-actions.ts; known phrase short-circuit + LLM timeout + local fallback; anon read RLS migration; AppShell Link nav",
+    "verification": [
+      "npm run lint: PASS",
+      "npm run build: PASS",
+      "db push 20260810103000: PASS",
+      "MCP RLS anon read policy: PASS",
+      "Browser click answer POST 200: PASS",
+      "Manual clean dev restart: MANUAL_PENDING"
+    ]
+  },
+  {
+    "date": "2026-08-09",
+    "title": "Published case missing from Practice Case Bank (PGRST201)",
+    "symptom": "Performance Review published case not shown in /practice; only seed case visible",
+    "root_cause": "Ambiguous PostgREST embed learning_cases(...) caused PGRST201; listPublishedCases silently fell back to seedCaseBank",
+    "fix": "Use learning_cases!learning_case_versions_case_id_fkey(...) FK hint; return [] on query error instead of seed",
+    "verification": [
+      "anon REST curl with FK hint: PASS",
+      "npm run lint: PASS",
+      "npm run build: PASS",
+      "Manual /practice refresh: MANUAL_PENDING"
+    ]
+  },
+  {
+    "date": "2026-08-08",
+    "title": "Generate candidate Unauthorized (no auth session)",
+    "symptom": "Admin Cases Generate Candidate button fails with Unauthorized",
+    "root_cause": "enqueue_case_candidate requires auth.uid() but app had no login flow; is_admin_or_reviewer ignored profiles.role",
+    "fix": "Added /login, admin route middleware guard, profile bootstrap, current_app_role reads profiles.role, requireAdminSession in admin actions",
+    "verification": [
+      "npm run lint: PASS",
+      "npm run build: PASS",
+      "npx supabase db push --include-all: PASS",
+      "MCP current_app_role migration: PASS",
+      "Manual login generate publish: MANUAL_PENDING"
+    ]
+  },
+  {
+    "date": "2026-08-08",
+    "title": "Ollama Cloud model 403 subscription required",
+    "symptom": "Edge smoke invoke returns HTTP 500 with Ollama HTTP 403 subscription required for qwen3.5:397b",
+    "root_cause": "OLLAMA_MODEL set to Pro-tier cloud model on Free Ollama account",
+    "fix": "Changed OLLAMA_MODEL secret to gpt-oss:20b (Free tier level-1 model); both practice_coach and case_enrichment smoke PASS",
+    "verification": [
+      "Edge smoke practice_coach: PASS",
+      "Edge smoke case_enrichment: PASS",
+      "MCP edge log POST 200: PASS"
+    ]
+  },
+  {
+    "date": "2026-08-08",
+    "title": "Ollama gateway smoke failed on default localhost endpoint",
+    "symptom": "Edge function learning-llm-gateway return HTTP 500 saat smoke invoke setelah deploy",
+    "root_cause": "Secret OLLAMA_BASE_URL belum menunjuk endpoint Ollama yang reachable dari Supabase runtime (fallback localhost connection refused)",
+    "fix": "Set OLLAMA_BASE_URL=https://ollama.com with API key; fallback-safe orchestration for speaking/case enrichment",
+    "verification": [
+      "npm run lint: PASS",
+      "npm run build: PASS",
+      "npx supabase functions deploy learning-llm-gateway: PASS",
+      "Edge invoke smoke after Option A + gpt-oss:20b: PASS"
+    ]
+  },
+  {
+    "date": "2026-08-08",
+    "title": "Speaking evaluator drift vs server state",
+    "symptom": "Feedback speaking di client berpotensi beda dengan status sesi di server karena evaluasi lokal berjalan paralel",
+    "root_cause": "Dual source-of-truth: heuristic evaluator di client dan evaluator persistence di server action",
+    "fix": "Made server evaluation authoritative in speaking flow and aligned completion handling with persisted session status",
+    "verification": [
+      "npm run lint: PASS",
+      "npm run build: PASS",
+      "Manual /practice flow: MANUAL_PENDING"
+    ]
+  },
+  {
+    "date": "2026-08-08",
+    "title": "PNG logo source-of-truth alignment",
+    "symptom": "Branding masih memakai placeholder dan aset non-final sementara source logo final adalah PNG user",
+    "root_cause": "Belum ada standardisasi satu aset logo di public/branding lintas shell, marketing, icon, dan watermark",
+    "fix": "Added public/branding/bolo-bule-logo.png and replaced logo references in shell, marketing, metadata, and global watermark",
+    "verification": [
+      "npm run lint: PASS",
+      "npm run build: PASS",
+      "Manual / and /today visual check: MANUAL_PENDING"
+    ]
+  },
+  {
     "date": "2026-08-06",
     "title": "AppShell dashboard webpack_require__.n dev crash",
     "symptom": "TypeError __webpack_require__.n is not a function on dashboard routes in AppShell.tsx dev",

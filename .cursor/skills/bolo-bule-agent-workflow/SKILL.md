@@ -72,5 +72,8 @@ npm run db:types  # regenerate Supabase types
 
 ## MCP
 
-- Project ref: `iuzvtttsjnlwtoegrsve` (see `.cursor/mcp.json`)
-- Use Supabase MCP for `execute_sql`, migration checks, logs, advisors
+- Server key: **`supabase-bolo-bule`** (never `user-supabase` in this repo)
+- Project ref: `iuzvtttsjnlwtoegrsve` (see `.cursor/mcp.json`, `.cursor/mcp-project.meta.json`)
+- Before SQL/RPC: `get_project_url` must return `iuzvtttsjnlwtoegrsve.supabase.co`
+- User switch workflow: Open Folder → Reload Window → `.\scripts\mcp-project-status.ps1`
+- Rule: `.cursor/rules/44-mcp-supabase-scope.mdc`

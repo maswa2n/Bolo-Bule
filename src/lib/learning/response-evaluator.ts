@@ -30,6 +30,33 @@ function detectGrammarFindings(text: string): EvaluatorFinding[] {
   return findings;
 }
 
+function isObjectiveCompleted(text: string, objectiveCode: ObjectiveCode): boolean {
+  const normalized = text.trim();
+  const words = normalized.split(/\s+/).filter(Boolean);
+  if (words.length < 5) return false;
+
+  const lower = normalized.toLowerCase();
+
+  switch (objectiveCode) {
+    case "CONFIRM_STATUS":
+      return /\b(status|tracking|shipment|location|confirm|latest|where)\b/i.test(lower);
+    case "EXPLAIN_IMPACT":
+      return /\b(impact|affect|delay|operation|standby|schedule|risk|maintenance)\b/i.test(lower);
+    case "REQUEST_COMMITMENT":
+      return (
+        /\b(commit|delivery|arrival|firm|specific)\b/i.test(lower) &&
+        /\b(before|today|time|pm|am|\d)\b/i.test(lower)
+      );
+    case "AGREE_FOLLOWUP":
+      return /\b(follow.?up|update|channel|agree|call|group|written)\b/i.test(lower);
+    default:
+      return (
+        /\b(will|confirm|provide|update|send|check)\b/i.test(lower) &&
+        words.length >= 6
+      );
+  }
+}
+
 export function evaluateSessionTurn(text: string, objectiveCode: ObjectiveCode | null): EvaluatorResult {
   const normalized = text.trim();
   const words = normalized.split(/\s+/).filter(Boolean);
@@ -51,7 +78,10 @@ export function evaluateSessionTurn(text: string, objectiveCode: ObjectiveCode |
   );
 
   const objectiveDetected: ObjectiveCode[] = objectiveCode ? [objectiveCode] : [];
-  const objectiveCompleted = objectiveCode && hasAction && (hasCommitment || hasImpact) ? [objectiveCode] : [];
+  const objectiveCompleted =
+    objectiveCode && isObjectiveCompleted(normalized, objectiveCode) && overallScore >= 55
+      ? [objectiveCode]
+      : [];
 
   return {
     scores: {

@@ -36,15 +36,37 @@ export function getNextConversationAction(input: StateMachineInput): GeneratedCo
   let difficultyAdjustment: GeneratedCoachTurn["difficultyAdjustment"] = "maintain";
 
   const userText = input.lastUserTranscript.toLowerCase();
-  const objectiveDone = input.session.coveredObjectives.length === input.activeCase.objectives.length;
+  const passScore = input.activeCase.conversationPolicy.minimumPassScore ?? DEFAULT_PASS_SCORE;
+  const requiredObjectives = input.activeCase.objectives.filter((objective) => objective.required);
+  const requiredCount = Math.max(1, requiredObjectives.length);
+  const requiredRatio = input.activeCase.conversationPolicy.requiredObjectiveCompletion ?? 1;
+  const minimumRequiredCompleted =
+    requiredRatio <= 1
+      ? Math.ceil(requiredCount * requiredRatio)
+      : Math.min(requiredCount, Math.floor(requiredRatio));
+  const coveredRequiredCount = input.session.coveredObjectives.filter((code) =>
+    requiredObjectives.some((objective) => objective.objectiveCode === code),
+  ).length;
+  const objectiveDone = coveredRequiredCount >= minimumRequiredCompleted;
   const targetReached = input.session.turnCount >= input.session.targetTurns;
-  const qualityReached = input.session.averageScore >= DEFAULT_PASS_SCORE;
+  const qualityReached = input.session.averageScore >= passScore;
+  const persistedPassed = input.session.completionStatus === "passed" || input.session.completionEligible;
+  const persistedTerminalWithoutPass = [
+    "completed_with_remedial",
+    "manually_ended",
+    "abandoned",
+    "system_terminated",
+  ].includes(input.session.completionStatus);
 
-  if (objectiveDone && targetReached && qualityReached) {
+  if (persistedPassed || (objectiveDone && targetReached && qualityReached)) {
     action = "COMPLETE_SESSION";
-    reasonCode = "COMPLETION_CRITERIA_MET";
+    reasonCode = persistedPassed ? "PERSISTED_COMPLETION_STATUS" : "COMPLETION_CRITERIA_MET";
     targetObjective = null;
     completionEligible = true;
+  } else if (persistedTerminalWithoutPass) {
+    action = "SUMMARIZE";
+    reasonCode = "PERSISTED_TERMINAL_STATUS";
+    completionEligible = false;
   } else if (input.session.turnCount >= input.session.maximumTurns) {
     action = "SUMMARIZE";
     reasonCode = "MAX_TURN_REACHED";

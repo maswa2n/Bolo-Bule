@@ -60,7 +60,7 @@ export function WritingSession({ activeCase, onEvaluate }: WritingSessionProps) 
   }
 
   return (
-    <section className="space-y-4 rounded-3xl border border-white/50 bg-white/90 p-5 shadow-sm">
+    <section className="bb-glass-panel bb-motion-rise bb-motion-delay-2 space-y-4 rounded-3xl p-4 sm:p-5">
       <header>
         <p className="text-xs font-semibold uppercase tracking-wider text-cyan-700">Writing Transfer</p>
         <h2 className="mt-1 text-xl font-semibold text-slate-900">{activeCase.title.en}</h2>
@@ -76,22 +76,25 @@ export function WritingSession({ activeCase, onEvaluate }: WritingSessionProps) 
         className="min-h-36 w-full rounded-2xl border border-slate-200 bg-white p-3 text-sm text-slate-900 outline-none ring-blue-500 focus:ring-2"
       />
 
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs text-slate-500">{text.length} characters</p>
         <button
           type="button"
           onClick={runEvaluation}
           disabled={isChecking || !text.trim()}
-          className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className={[
+            "bb-btn-primary bb-press-depth bb-tap-target w-full px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto",
+            isChecking ? "bb-motion-pulse" : "",
+          ].join(" ")}
         >
           {isChecking ? "Checking..." : "Evaluate writing"}
         </button>
       </div>
 
-      {errorMessage ? <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">{errorMessage}</p> : null}
+      {errorMessage ? <p className="bb-state-enter bb-state-error rounded-xl px-3 py-2 text-sm">{errorMessage}</p> : null}
 
       {feedback ? (
-        <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <div className="bb-celebrate-subtle bb-state-enter space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
           <div className="grid gap-3 md:grid-cols-2">
             <div className="rounded-xl bg-white p-3">
               <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-500">Original</p>
@@ -103,7 +106,7 @@ export function WritingSession({ activeCase, onEvaluate }: WritingSessionProps) 
             </div>
           </div>
 
-          <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          <p className="bb-state-info rounded-xl px-3 py-2 text-sm">
             <strong>Lesson:</strong> {feedback.lesson}
           </p>
 

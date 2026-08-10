@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { generateNextCoachTurn } from "@/lib/ai/conversation-generator";
+import { buildCaseSummary, requestPracticeCoachTurn } from "@/lib/ai/ollama-practice-coach";
 import { evaluateWritingResponse } from "@/lib/ai/response-evaluator";
 import {
   completeLearningSession,
@@ -11,11 +12,12 @@ import {
   listPublishedCases,
   startLearningSession,
   submitLearningTurn,
+  updateLearningTurnCoachOutput,
 } from "@/lib/learning/case-repository";
 import { getNextConversationAction } from "@/lib/learning/conversation-state-machine";
 import { updateUserMasteryAfterTurn } from "@/lib/learning/mastery-updater";
 import { evaluateSessionTurn } from "@/lib/learning/response-evaluator";
-import type { GeneratedCoachTurn, ObjectiveCode } from "@/types/learning";
+import type { ConversationLogMessage, GeneratedCoachTurn, ObjectiveCode } from "@/types/learning";
 
 type StartPayload = {
   caseVersionId: number;
@@ -29,6 +31,15 @@ type SubmitTurnPayload = {
   objectiveCode: ObjectiveCode | null;
   turnNumber: number;
   inputType: "voice" | "text";
+  learnerContext: string;
+  conversationHistory: ConversationLogMessage[];
+};
+
+type ReviseContextPayload = {
+  sessionId: number;
+  learnerContext: string;
+  conversationHistory: ConversationLogMessage[];
+  objectiveCode: ObjectiveCode | null;
 };
 
 export async function getPublishedCasesAction() {
@@ -98,17 +109,125 @@ export async function submitPracticeTurnAction(payload: SubmitTurnPayload) {
           })
         : null;
 
+    const llmResult =
+      snapshot && activeCase
+        ? await requestPracticeCoachTurn({
+            transcript: payload.transcript,
+            objectiveCode: payload.objectiveCode,
+            recommendedAction: machineTurn?.action ?? evaluation.recommendedNextAction,
+            completionEligible: saveResult.completionEligible,
+            learnerContext: payload.learnerContext,
+            conversationHistory: payload.conversationHistory,
+            activeCase: buildCaseSummary(activeCase),
+          })
+        : {
+            generatedTurn: null,
+            metadata: {
+              provider: "fallback",
+              model: "state-machine",
+              latencyMs: null,
+              tokenUsage: null,
+              fallbackUsed: true,
+            },
+          };
+
     const generatedTurn = await generateNextCoachTurn({
       transcript: payload.transcript,
       objectiveCode: payload.objectiveCode,
       recommendedAction: machineTurn?.action ?? evaluation.recommendedNextAction,
       completionEligible: saveResult.completionEligible,
+      llmGeneratedTurn: llmResult.generatedTurn,
     });
 
-    return { generatedTurn, completionEligible: saveResult.completionEligible };
+    try {
+      await updateLearningTurnCoachOutput({
+        sessionId: payload.sessionId,
+        turnNumber: payload.turnNumber,
+        coachResponse: generatedTurn.coachMessageEn,
+        modelName: llmResult.metadata.fallbackUsed
+          ? "state-machine-fallback"
+          : `${llmResult.metadata.provider}:${llmResult.metadata.model}`,
+        latencyMs: llmResult.metadata.latencyMs,
+        tokenUsage: llmResult.metadata.tokenUsage ?? {},
+      });
+    } catch {
+      // Coach metadata persistence must not block the learner's speaking flow.
+    }
+
+    return {
+      generatedTurn,
+      evaluation,
+      llm: llmResult.metadata,
+      session: {
+        completionEligible: saveResult.completionEligible,
+        completionStatus: saveResult.completionStatus,
+        averageScore: saveResult.averageScore,
+        coveredObjectives: saveResult.coveredObjectives,
+      },
+    };
   } catch (error) {
     return {
       error: error instanceof Error ? error.message : "Gagal memproses jawaban sesi.",
+      generatedTurn: null as GeneratedCoachTurn | null,
+    };
+  }
+}
+
+export async function revisePracticeContextAction(payload: ReviseContextPayload) {
+  try {
+    const trimmedContext = payload.learnerContext.trim();
+    if (!trimmedContext) {
+      return { error: "Context practice kosong." };
+    }
+
+    const snapshot = await getSessionSnapshot(payload.sessionId);
+    if (!snapshot) {
+      return { error: "Sesi tidak ditemukan." };
+    }
+
+    const activeCase = await getPublishedCaseByVersionId(snapshot.caseVersionId);
+    if (!activeCase) {
+      return { error: "Case tidak ditemukan." };
+    }
+
+    const lastUserMessage =
+      [...payload.conversationHistory].reverse().find((item) => item.role === "user")?.message.trim() ?? "";
+
+    const machineTurn = getNextConversationAction({
+      session: snapshot,
+      activeCase,
+      lastUserTranscript: lastUserMessage,
+      lastObjectiveCode: payload.objectiveCode,
+      objectiveDetected: false,
+      objectiveCompleted: false,
+    });
+
+    const llmResult = await requestPracticeCoachTurn({
+      transcript: lastUserMessage || "[Learner revised practice context]",
+      objectiveCode: payload.objectiveCode,
+      recommendedAction: machineTurn.action,
+      completionEligible: snapshot.completionEligible,
+      learnerContext: trimmedContext,
+      conversationHistory: payload.conversationHistory,
+      activeCase: buildCaseSummary(activeCase),
+    });
+
+    const generatedTurn = await generateNextCoachTurn({
+      transcript: lastUserMessage,
+      objectiveCode: payload.objectiveCode,
+      recommendedAction: machineTurn.action,
+      completionEligible: snapshot.completionEligible,
+      llmGeneratedTurn: llmResult.generatedTurn,
+    });
+
+    return {
+      generatedTurn,
+      contextApplied: trimmedContext,
+      llm: llmResult.metadata,
+    };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Gagal menerapkan revisi context.",
       generatedTurn: null as GeneratedCoachTurn | null,
     };
   }

@@ -6,6 +6,7 @@ type GeneratorInput = {
   objectiveCode: ObjectiveCode | null;
   recommendedAction: ConversationNextAction;
   completionEligible: boolean;
+  llmGeneratedTurn?: GeneratedCoachTurn | null;
 };
 
 function fallbackGenerate(input: GeneratorInput): GeneratedCoachTurn {
@@ -39,6 +40,22 @@ function fallbackGenerate(input: GeneratorInput): GeneratedCoachTurn {
 }
 
 export async function generateNextCoachTurn(input: GeneratorInput): Promise<GeneratedCoachTurn> {
+  if (input.llmGeneratedTurn) {
+    const llmValidated = generatedCoachTurnSchema.safeParse(input.llmGeneratedTurn);
+    if (llmValidated.success) {
+      if (input.completionEligible) {
+        return {
+          ...llmValidated.data,
+          action: "COMPLETE_SESSION",
+          targetObjective: null,
+          completionEligible: true,
+          reasonCode: "COMPLETION_ELIGIBLE",
+        };
+      }
+      return llmValidated.data;
+    }
+  }
+
   const fallback = fallbackGenerate(input);
   const validated = generatedCoachTurnSchema.safeParse(fallback);
   if (!validated.success) {

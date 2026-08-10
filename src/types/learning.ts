@@ -172,6 +172,19 @@ export type GeneratedCoachTurn = {
   completionEligible: boolean;
 };
 
+export type ConversationLogMessage = {
+  role: "coach" | "user";
+  message: string;
+};
+
+export type LlmGenerationMetadata = {
+  provider: string;
+  model: string;
+  latencyMs: number | null;
+  tokenUsage: Record<string, unknown> | null;
+  fallbackUsed: boolean;
+};
+
 export type CaseCandidateValidationSummary = {
   schemaValid: boolean;
   duplicateCheckPassed: boolean;

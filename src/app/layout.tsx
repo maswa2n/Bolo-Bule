@@ -15,6 +15,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Bolo Bule",
   description: "Adaptive workplace English learning platform with Supabase backend.",
+  icons: {
+    icon: "/branding/bolo-bule-logo.png",
+    shortcut: "/branding/bolo-bule-logo.png",
+    apple: "/branding/bolo-bule-logo.png",
+  },
 };
 
 export default function RootLayout({

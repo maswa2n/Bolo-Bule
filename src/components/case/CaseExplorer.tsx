@@ -10,18 +10,18 @@ type CaseExplorerProps = {
 
 export function CaseExplorer({ cases, activeCaseId, onSelectCase }: CaseExplorerProps) {
   return (
-    <section className="rounded-3xl border border-white/50 bg-white/80 p-5 shadow-sm backdrop-blur">
-      <div className="mb-4 flex items-end justify-between gap-3">
+    <section className="bb-glass-panel bb-motion-rise bb-motion-delay-1 rounded-3xl p-4 sm:p-5">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.15em] text-cyan-700">Case Bank</p>
           <h2 className="text-xl font-semibold text-slate-900">Pilih Kasus Latihan</h2>
         </div>
-        <span className="rounded-full bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-800">
+        <span className="w-fit rounded-full bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-800">
           {cases.length} cases
         </span>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <div className="bb-scrollbar-hidden flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 md:grid md:grid-cols-2 md:overflow-visible md:pb-0 xl:grid-cols-3">
         {cases.map((item) => {
           const active = activeCaseId === item.id;
           return (
@@ -30,10 +30,10 @@ export function CaseExplorer({ cases, activeCaseId, onSelectCase }: CaseExplorer
               type="button"
               onClick={() => onSelectCase(item.id)}
               className={[
-                "rounded-2xl border p-4 text-left transition",
+                "bb-interactive-lift bb-press-depth bb-tap-target min-w-[280px] snap-start rounded-2xl border p-4 text-left transition md:min-w-0",
                 active
                   ? "border-blue-400 bg-blue-50 shadow-sm"
-                  : "border-slate-200 bg-white hover:border-cyan-300 hover:bg-cyan-50/50",
+                  : "border-slate-200 bg-white/95 hover:border-cyan-300 hover:bg-cyan-50/50",
               ].join(" ")}
             >
               <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">

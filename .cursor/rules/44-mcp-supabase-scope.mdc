@@ -1,0 +1,31 @@
+---
+description: Supabase MCP scope for Bolo Bule — use project server only, never user-supabase
+alwaysApply: true
+---
+
+# Supabase MCP (Bolo Bule)
+
+## Project truth
+
+| Field | Value |
+|-------|-------|
+| Workspace | Bolo Bule |
+| MCP server key | `supabase-bolo-bule` |
+| Project ref | `iuzvtttsjnlwtoegrsve` |
+| API URL | `https://iuzvtttsjnlwtoegrsve.supabase.co` |
+
+## Agent rules (hard)
+
+1. For **any** Supabase MCP call (`execute_sql`, `list_migrations`, `apply_migration`, `get_logs`, `get_advisors`, dll.) in this repo → use server **`supabase-bolo-bule`** (Cursor may prefix: `project-*-supabase-bolo-bule`).
+2. **Never** use `user-supabase` or global `supabase` for DB/RPC/migration work in this workspace — those belong to CMMS-Bus.
+3. Before SQL/RPC smoke: run `get_project_url` on **`supabase-bolo-bule`**; must return `iuzvtttsjnlwtoegrsve.supabase.co`.
+4. If URL mismatch → stop and ask user to run `.\scripts\mcp-project-status.ps1` then Reload Window.
+
+## User switched from CMMS-Bus
+
+1. **File → Open Folder** → `D:\Bolo Bule` (single-root workspace).
+2. **Ctrl+Shift+P** → `Developer: Reload Window`.
+3. Terminal: `.\scripts\mcp-project-status.ps1`
+4. In chat: verify MCP `get_project_url` → `iuzvtttsjnlwtoegrsve`.
+
+Meta: `.cursor/mcp-project.meta.json` | Status script: `scripts/mcp-project-status.ps1`
