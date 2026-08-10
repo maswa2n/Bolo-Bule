@@ -1,7 +1,19 @@
 [
   {
     "date": "2026-08-10",
-    "title": "Practice layout.css 404 + translateSupportOptionAction POST 500",
+    "title": "Vercel /practice Dynamic server usage cookies",
+    "symptom": "Production build: listPublishedCases Dynamic server usage Route /practice used cookies",
+    "root_cause": "listPublishedCases used createClient() from server.ts which calls next/headers cookies() during static generation",
+    "fix": "createStaticClient() with empty cookie handlers for published case reads; RLS allows anon published access",
+    "verification": [
+      "MCP execute_sql published count: PASS",
+      "npm run lint: PASS",
+      "npm run build: PASS",
+      "/practice static route: PASS"
+    ]
+  },
+  {
+    "date": "2026-08-10",
     "symptom": "Console layout.css 404 and POST /practice 500 when clicking answer option",
     "root_cause": "Stale Next.js dev/HMR: CSS chunk 404 + server action ID mismatch; heavy actions.ts bundle; phrase cache RLS authenticated-only",
     "fix": "Split phrase-actions.ts; known phrase short-circuit + LLM timeout + local fallback; anon read RLS migration; AppShell Link nav",

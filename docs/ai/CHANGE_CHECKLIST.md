@@ -63,6 +63,21 @@ Apply whenever a migration **rewrites an existing RPC** that was previously hard
 
 ## Entries
 
+## 2026-08-10 — Vercel /practice Dynamic server usage (cookies)
+- **Target output:** Build production Vercel berhasil tanpa error `Dynamic server usage` di route `/practice`; halaman menampilkan published cases dari Supabase.
+- **Surface:** server (Next.js SSG + Supabase data layer)
+- **Acceptance criteria:**
+  - [x] `npm run build` tidak log `[listPublishedCases] Unexpected error: Dynamic server usage`
+  - [x] Route `/practice` di-build sebagai static (○)
+  - [x] `listPublishedCases()` tetap mengembalikan published cases (MCP smoke: 1 row)
+- **Auto verification (agent runs):**
+  - [x] MCP `get_project_url` → `iuzvtttsjnlwtoegrsve.supabase.co` → exit OK
+  - [x] MCP `execute_sql` published count → 1 → PASS
+  - [x] `npm run lint` → exit 0
+  - [x] `npm run build` → exit 0
+- **Results:** Sebelum fix, build log error cookies + `/practice` gagal load cases; setelah `createStaticClient()`, build PASS dan `/practice` static.
+- **Status:** PASS
+
 ## 2026-08-10 — Login Phase 3: A/B CTA + sticky mobile CTA + mode-based hero variants
 - **Target output:** `/login` mendorong conversion lebih tinggi lewat A/B copy CTA, sticky CTA di mobile, dan konten hero yang berubah sesuai mode `signin` vs `signup`.
 - **Surface:** frontend

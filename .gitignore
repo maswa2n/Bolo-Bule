@@ -31,3 +31,5 @@ supabase/.temp/
 
 # Accidental nested clone (do not commit)
 Bolo-Bule/
+.vercel
+.env*

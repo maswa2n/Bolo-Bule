@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createStaticClient } from "@/lib/supabase/static";
 import { seedCaseBank } from "@/lib/learning/seed-case-bank";
 import type {
   CandidateLifecycleStatus,
@@ -292,7 +293,7 @@ const publishedCaseSelect =
 
 export async function listPublishedCases(): Promise<LearningCaseVersion[]> {
   try {
-    const supabase = await createClient();
+    const supabase = createStaticClient();
     const { data, error } = await supabase
       .from("learning_case_versions")
       .select(publishedCaseSelect)

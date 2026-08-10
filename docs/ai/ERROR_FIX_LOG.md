@@ -2,6 +2,14 @@
 
 _(Add entries newest first. Use template from Rule 02 / `.cursor/rules/02-knowledge-loop.mdc`.)_
 
+## 2026-08-10 — Vercel build: /practice Dynamic server usage (cookies)
+- **Symptom:** Vercel production build log: `[listPublishedCases] Unexpected error: Dynamic server usage: Route /practice couldn't be rendered statically because it used cookies`.
+- **Root cause:** `listPublishedCases()` memanggil `createClient()` dari `@/lib/supabase/server` yang memakai `cookies()` dari `next/headers`. Next.js 15 mencoba pre-render `/practice` secara statis saat build; pemanggilan `cookies()` memicu `DYNAMIC_SERVER_USAGE`.
+- **Fix:** Tambah `createStaticClient()` di `@/lib/supabase/static` (SSR client dengan cookie handler kosong, tanpa `next/headers`); `listPublishedCases()` pakai static client karena RLS `learning_case_versions_select` mengizinkan anon read untuk `status = 'published'`.
+- **Prevention update:** Data publik/RLS-anon untuk halaman yang bisa di-SSG → gunakan `createStaticClient()`, bukan server client ber-cookie.
+- **Files touched:** `src/lib/supabase/static.ts`, `src/lib/learning/case-repository.ts`, `docs/ai/*`
+- **Verification:** MCP `execute_sql` published count=1 (PASS); `npm run lint` (PASS); `npm run build` (PASS, `/practice` static ○, no Dynamic server error).
+
 ## 2026-08-10 — Practice console layout.css 404 + translateSupportOptionAction POST 500
 - **Symptom:** Console menampilkan `layout.css 404` dan `POST /practice 500` saat klik pilihan jawaban (`translateSupportOptionAction`).
 - **Root cause:** Dev server stale/HMR — chunk CSS `/_next/static/css/app/layout.css` tidak ditemukan (404); client bundle server-action ID tidak sinkron dengan server → POST 500. Kontribusi sekunder: action berat di `actions.ts` + cache phrase RLS hanya `authenticated` sehingga anon selalu hit LLM.
